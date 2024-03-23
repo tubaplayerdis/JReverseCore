@@ -21,7 +21,7 @@ extern "C" {
 	 * Signature: (ILjava/lang/String;)I
 	 */
 	JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InjectDLL
-	(JNIEnv* jniEnv, jclass, jint PID, jstring Location);
+	(JNIEnv*, jclass, jint, jstring);
 
 	/*
 	 * Class:     com_jreverse_jreverse_Bridge_JReverseBridge
@@ -45,7 +45,7 @@ extern "C" {
 	 * Signature: ()Ljava/lang/String;
 	 */
 	JNIEXPORT jstring JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_GetStringPipe
-	(JNIEnv* env, jclass);
+	(JNIEnv*, jclass);
 
 	/*
 	 * Class:     com_jreverse_jreverse_Bridge_JReverseBridge
@@ -53,7 +53,7 @@ extern "C" {
 	 * Signature: (Ljava/lang/String;)V
 	 */
 	JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStringPipe
-	(JNIEnv* env, jclass, jstring data);
+	(JNIEnv*, jclass, jstring);
 
 #ifdef __cplusplus
 }

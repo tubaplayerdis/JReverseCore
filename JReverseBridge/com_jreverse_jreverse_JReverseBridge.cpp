@@ -105,7 +105,8 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InjectDL
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_SetupPipe(JNIEnv*, jclass)
 {
     SharedMemManager::Setup();
-    SharedMemManager::WriteString("Testing Shared Memory Pipeline!");
+    SharedMemManager::WriteString("Testing Shared Memory Pipeline! - From JReverse");
+    return;
 }
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_PrimeLoadedClasses(JNIEnv*, jclass)

@@ -1,0 +1,8 @@
+1. If the Bridge DLL is Updated, it has to be copied to the jreverse folder(more like replaces) for updates to work becuase it uses that dll: C:\Users\aaron\IdeaProjects\jreverse
+
+2. The sharedMemManager is for the bridge DLL, the PipeManager is for the injectable. They both deal with the same Shared Memory exepct that Pipe Manager uses open_only flag when iniating
+
+3. Develop fully module pipe system. Create Pipes, Delete Pipes etc
+
+4. look at search history and chat gpt for questions
+

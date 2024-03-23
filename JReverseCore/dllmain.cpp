@@ -10,6 +10,7 @@
 #include <fstream>
 #include <vector>
 #include "PipeManager.h"
+#include <boost/interprocess/windows_shared_memory.hpp>
 
 
 
@@ -191,9 +192,12 @@ void MainThread(HMODULE instance)
     std::printf("JReverse Has Been Injected Successfully!\n");
     using jniGetCreatedJavaVMs_t = jint(*)(JavaVM** vmBuf, jsize bufLen, jsize* nVMs);
 
+    
     PipeManager::SetupClient();
     std::printf(PipeManager::ReadString().c_str());
     std::printf("\n");
+    
+    PipeManager::WriteString("Testing Shared Memory Pipeline! - From Injected Application");
 
     const auto jvmHandle = GetModuleHandleW(L"jvm.dll");
     if (jvmHandle == nullptr)
