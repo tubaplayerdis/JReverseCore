@@ -147,12 +147,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="com_jreverse_jreverse_JReverseBridge.h" />
+    <ClInclude Include="com_jreverse_jreverse_PipeManager_PipeManager.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="PipeAPI.h" />
     <ClInclude Include="SharedMemManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="com_jreverse_jreverse_JReverseBridge.cpp" />
+    <ClCompile Include="com_jreverse_jreverse_PipeManager_PipeManager.cpp" />
     <ClCompile Include="PipeAPI.cpp" />
     <ClCompile Include="SharedMemManager.cpp" />
   </ItemGroup>

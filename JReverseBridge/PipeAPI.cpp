@@ -8,7 +8,7 @@ JReversePipe<std::vector<std::string>> PipeNamePipe = JReversePipe<std::vector<s
 static JReversePipe<std::string> CommunicationPipe = JReversePipe<std::string>("CriticalCommunicationPipe", 1, 1000);;
 
 
-boost::interprocess::mode_t PipeAPI::getMode(int arg)
+boost::interprocess::mode_t JReversePipeHelpers::getMode(int arg)
 {
     switch (arg)
     {

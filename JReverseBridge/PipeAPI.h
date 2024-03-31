@@ -4,26 +4,19 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/any/basic_any.hpp>
 
+class JReversePipeHelpers
+{
+public:
+    static boost::interprocess::mode_t getMode(int arg);
+};
+
+
 class JReversePipeInfo
 {
 public:
     std::string Name;
     int Size;
     boost::interprocess::mode_t Mode;
-};
-
-class PipeAPI
-{
-public:
-    static std::vector<JReversePipeInfo> GetAllPipesInfo();//Read from PipeNamePipe
-    //Critical Pipes
-    static JReversePipe<std::string> FunctionPipe;
-    static JReversePipe<std::vector<std::string>> PipeNamePipe;
-    static JReversePipe<std::string> CommunicationPipe;
-   
-
-    //Crap
-    static boost::interprocess::mode_t getMode(int arg);
 };
 
 template<typename T>
@@ -45,10 +38,10 @@ inline JReversePipe<T>::JReversePipe(std::string Name, int Mode, int Size)
     //This was stolen
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
-    windows_shared_memory ghm(create_only, Name, PipeAPI::getMode(Mode), 1000);
+    windows_shared_memory ghm(create_only, Name, JReversePipeHelpers::getMode(Mode), 1000);
 
     //Map the whole shared memory in this process
-    mapped_region regionn(ghm, getMode(Mode));
+    mapped_region regionn(ghm, JReversePipeHelpers::getMode(Mode));
 
     //Write all the memory to 1
     std::memset(regionn.get_address(), 1, regionn.get_size());
@@ -79,4 +72,13 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
     return returnable;
 }
 
+class PipeAPI
+{
+public:
+    static std::vector<JReversePipeInfo> GetAllPipesInfo();//Read from PipeNamePipe
+    //Critical Pipes
+    static JReversePipe<std::string> FunctionPipe;
+    static JReversePipe<std::vector<std::string>> PipeNamePipe;
+    static JReversePipe<std::string> CommunicationPipe;
+};
 
