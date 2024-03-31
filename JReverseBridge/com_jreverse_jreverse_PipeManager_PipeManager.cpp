@@ -4,7 +4,7 @@
 JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_GetLoadedPipes(JNIEnv* env, jclass)
 {
     //
-    // THIS WAS COPIED OF GOOGLE FOR EXAMPLE, FLESH OUT THE PIPE API THEN USE IT.
+    // THIS WAS COPIED OF GOOGLE FOR EXAMPLE, FINISH THE PIPE API THEN USE IT.
     // 
     // Find the class of java.lang.String
     jclass stringClass = env->FindClass("java/lang/String");
