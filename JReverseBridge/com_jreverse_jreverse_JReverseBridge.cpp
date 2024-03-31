@@ -6,6 +6,7 @@
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include "SharedMemManager.h"
+#include "PipeAPI.h"
 
 bool Inject(DWORD pId, char* dllName)
 {
@@ -111,6 +112,10 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_SetupPip
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_PrimeLoadedClasses(JNIEnv*, jclass)
 {
+    JReversePipe<int> mypipe = JReversePipe<int>("MyPipe", 1, 1000);
+    mypipe.WritePipe(345);
+    int noway = mypipe.ReadPipe();
+    //should be 345!
     return;
 }
 

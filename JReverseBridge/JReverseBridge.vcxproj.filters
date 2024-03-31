@@ -24,12 +24,18 @@
     <ClInclude Include="SharedMemManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PipeAPI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="com_jreverse_jreverse_JReverseBridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SharedMemManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PipeAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
