@@ -2,6 +2,8 @@
 #include <string>
 #include <memory.h>
 #include <type_traits>
+#include <algorithm>
+#include <iterator>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/any/basic_any.hpp>
@@ -70,9 +72,9 @@ inline T JReversePipe<T>::ReadPipe()
     }
     T data;
     if constexpr (std::is_same_v<T, std::vector<std::string>>) {
-        std::vector<std::string> ndata;
-        std::memcpy(&ndata, region.get_address(), ndata.size() * sizeof(std::string));
-        data = ndata;
+        char* data = static_cast<char*>(region.get_address());
+        std::vector<std::string> ndata(data, data + region.get_size());
+        return ndata;
     }
     else
     {
