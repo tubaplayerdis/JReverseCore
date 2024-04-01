@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <memory.h>
+#include <type_traits>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/any/basic_any.hpp>
@@ -17,6 +19,7 @@ public:
 private:
     boost::interprocess::windows_shared_memory shm;
     boost::interprocess::mapped_region region;
+    size_t writtenSize;
 };
 
 template<typename T>
@@ -36,6 +39,8 @@ inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode
     ghm.swap(shm);
     regionn.swap(region);
 
+    writtenSize = sizeof(T);
+
     //Inform the PipeNamePipe
     /*
     if (Name != "CriticalPipeNamePipe" || Name != "CriticalFunctionPipe" || Name != "CriticalCommunicationPipe") {
@@ -50,14 +55,29 @@ inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode
 template<typename T>
 inline void JReversePipe<T>::WritePipe(const T& data)
 {
-    std::memcpy(region.get_address(), &data, sizeof(data));
+    if (sizeof(data) > region.get_size()) {
+        throw std::exception("The data is to big for the region!");
+    }
+    writtenSize = sizeof(data);
+    std::memcpy(region.get_address(), &data, sizeof(T));
 }
 
 template<typename T>
 inline T JReversePipe<T>::ReadPipe()
 {
+    if (region.get_address() == nullptr) {
+        throw std::exception("address was null");
+    }
     T data;
-    std::memcpy(&data, region.get_address(), sizeof(data));
+    if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+        std::vector<std::string> ndata;
+        std::memcpy(&ndata, region.get_address(), ndata.size() * sizeof(std::string));
+        data = ndata;
+    }
+    else
+    {
+        std::memcpy(&data, region.get_address(), sizeof(T));
+    }
     return data;
 }
 
@@ -66,7 +86,7 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
 {
     JReversePipeInfo returnable;
     returnable.Name = std::string(shm.get_name());
-    returnable.Size = shm.get_size();
+    returnable.Size = region.get_size();
     returnable.Mode = shm.get_mode();
     return returnable;
 }
