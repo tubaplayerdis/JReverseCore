@@ -43,7 +43,8 @@ inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode
 
     writtenSize = sizeof(T);
 
-    //Inform the PipeNamePipe
+    //ADD BACK
+    //Inform the PipeNamePipe 
     /*
     if (Name != "CriticalPipeNamePipe" || Name != "CriticalFunctionPipe" || Name != "CriticalCommunicationPipe") {
         std::vector<std::string> curinfo = PipeAPI::PipeNamePipe.ReadPipe();
@@ -60,7 +61,30 @@ inline void JReversePipe<T>::WritePipe(const T& data)
     if (sizeof(data) > region.get_size()) {
         throw std::exception("The data is to big for the region!");
     }
-    writtenSize = sizeof(data);
+
+    //writtenSize = sizeof(data);
+
+    if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+        std::vector<std::string> vec = data;
+        void* address = region.get_address();
+
+        // Calculate the total size needed for the strings
+        std::size_t totalSize = 0;
+        for (const std::string& str : vec) {
+            totalSize += str.size() + 1; // Include null terminator
+        }
+
+        // Write the strings to the mapped region
+        char* ptr = static_cast<char*>(address);
+        for (const std::string& str : vec) {
+            std::size_t size = str.size();
+            std::memcpy(ptr, str.c_str(), size); // Copy the string data
+            ptr += size;
+            *ptr++ = '\0'; // Null terminate the string
+        }
+        *ptr = '\0';
+        return;
+    }
     std::memcpy(region.get_address(), &data, sizeof(T));
 }
 
@@ -72,12 +96,45 @@ inline T JReversePipe<T>::ReadPipe()
     }
     T data;
     if constexpr (std::is_same_v<T, std::vector<std::string>>) {
-        char* data = static_cast<char*>(region.get_address());
-        std::vector<std::string> ndata(data, data + region.get_size());
-        return ndata;
+        void* address = region.get_address();
+
+        // Determine the size of the mapped data
+        std::size_t size = region.get_size();
+        std::vector<std::string> myStringVector;
+        try
+        {
+            // Check if the mapped region is empty
+            if (size == 0) {
+               std::runtime_error("Mapped region is empty.");
+            }
+
+            // Read and deserialize the strings from the mapped region
+            std::vector<std::string> vec;
+            char* ptr = static_cast<char*>(address);
+            while (*ptr != '\0') { // Check for null terminator at the beginning of each string
+                // Find the null terminator
+                char* endPtr = std::strchr(ptr, '\0');
+                if (endPtr == nullptr) {
+                    // Null terminator not found within the mapped region
+                    std::runtime_error("Null terminator not found within the mapped region.");
+                }
+
+                // Read the string and add it to the vector
+                std::string str(ptr, endPtr - ptr);
+                vec.push_back(str);
+                ptr = endPtr + 1; // Move to the next string (skip null terminator)
+            }
+            myStringVector = vec;
+        }
+        catch (std::runtime_error e)
+        {
+            myStringVector.push_back(std::string(e.what()));
+        }
+        data = myStringVector;
+        
     }
     else
-    {
+    {       
         std::memcpy(&data, region.get_address(), sizeof(T));
     }
     return data;

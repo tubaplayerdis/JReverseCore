@@ -4,21 +4,21 @@
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_InitAPI(JNIEnv*, jclass)
 {
-    //PipeAPI::addCritPipes();
+    PipeAPI::setCritPipes();
 }
 
 JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_GetLoadedPipes(JNIEnv* env, jclass)
 {   
     std::vector<std::string> exdata;
-    exdata.push_back(std::string("Testing"));
-    exdata.push_back(std::string("Testing"));
-    exdata.push_back(std::string("Testing"));
-    exdata.push_back(std::string("Testing"));
-    exdata.push_back(std::string("Testing"));
-    exdata.push_back(std::string("Testing"));
+    exdata.push_back("Testing");
+    exdata.push_back("Testing");
+    exdata.push_back("Testing");
+    exdata.push_back("Testing");
+    exdata.push_back("Testing");
+    exdata.push_back("Testing");
 
     
-    PipeAPI::PipeNamePipe.WritePipe(exdata);
+    //PipeAPI::PipeNamePipe.WritePipe(exdata);
    
 
     JReversePipe<int> mypipe = JReversePipe<int>("MyPipe", boost::interprocess::read_write, 1000);
@@ -44,7 +44,6 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManage
     env->SetObjectArrayElement(stringArray, 0, string1);
     env->SetObjectArrayElement(stringArray, 1, string2);
     */
-
     std::string errr = "No Error";
     std::vector<std::string> tes = PipeAPI::PipeNamePipe.ReadPipe();
     

@@ -10,7 +10,7 @@
 class PipeAPI
 {
 public:
-    static void addCritPipes();
+    static void setCritPipes();
     static std::vector<std::string> GetAllPipeNames();//Read from PipeNamePipe
     static std::vector<JReversePipeInfo> GetAllPipesInfo();
     //Critical Pipes

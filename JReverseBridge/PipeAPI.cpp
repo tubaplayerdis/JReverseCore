@@ -10,9 +10,9 @@ JReversePipe<std::vector<std::string>> PipeAPI::PipeNamePipe = JReversePipe<std:
 JReversePipe<std::string> PipeAPI::CommunicationPipe = JReversePipe<std::string>("CriticalFunctionPipe", boost::interprocess::read_write, 1000);
 
 
-void PipeAPI::addCritPipes()
+void PipeAPI::setCritPipes()
 {
-    std::vector<std::string> cur = PipeAPI::PipeNamePipe.ReadPipe();
+    std::vector<std::string> cur;
     cur.push_back(std::string("CriticalFunctionPipe"));
     cur.push_back(std::string("CriticalPipeNamePipe"));
     cur.push_back(std::string("CriticalCommunicationPipe"));
