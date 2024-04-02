@@ -22,7 +22,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManage
    
 
     JReversePipe<int> mypipe = JReversePipe<int>("MyIntPipe", boost::interprocess::read_write, 1000);
-    PipeAPI::AddPipeToList("MyIntPipe");
+    PipeAPI::AddPipeToList("MyIntPipe:int");
     mypipe.WritePipe(345);
     int noway = mypipe.ReadPipe();
 

@@ -8,6 +8,7 @@ class PipeClientAPI
 public:
     static std::vector<std::string> GetAllPipes();
     static bool CheckForPipe(std::string pipename);
+    static std::string GetPipeType(std::string name);
     static void PrintPipes();
 
     static JReversePipeClient<std::string> FunctionPipe;
