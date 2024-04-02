@@ -11,7 +11,7 @@
 #include <vector>
 #include "PipeManager.h"
 #include <boost/interprocess/windows_shared_memory.hpp>
-
+#include "PipeClientAPI.h"
 
 
 
@@ -252,6 +252,10 @@ void MainThread(HMODULE instance)
 
 
     std::printf("Successfully connected to the Java VM\n");
+
+    std::printf("Connecting to Client Pipe API...\n");
+
+    PipeClientAPI::PrintPipes();
 }
 
 bool __stdcall DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)

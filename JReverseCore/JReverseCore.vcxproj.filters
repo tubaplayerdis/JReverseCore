@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\PipeUtils">
+      <UniqueIdentifier>{0ade1a3a-6ce0-4dd0-869e-110e685cd61a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PipeUtils">
+      <UniqueIdentifier>{017fff31-2250-4e2d-b725-676c0db3d403}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -24,6 +30,18 @@
     <ClInclude Include="PipeManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="JReversePipeClient.h">
+      <Filter>Header Files\PipeUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="JReversePipeHelper.h">
+      <Filter>Header Files\PipeUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="JReversePipeInfo.h">
+      <Filter>Header Files\PipeUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="PipeClientAPI.h">
+      <Filter>Header Files\PipeUtils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -34,6 +52,15 @@
     </ClCompile>
     <ClCompile Include="PipeManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\JReverseBridge\JReversePipeHelper.cpp">
+      <Filter>Source Files\PipeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="JReversePipeHelper.cpp">
+      <Filter>Source Files\PipeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="PipeClientAPI.cpp">
+      <Filter>Source Files\PipeUtils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

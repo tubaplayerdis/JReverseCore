@@ -28,3 +28,10 @@ std::vector<JReversePipeInfo> PipeAPI::GetAllPipesInfo()
 {
     return std::vector<JReversePipeInfo>();
 }
+
+void PipeAPI::AddPipeToList(std::string name)
+{
+    std::vector<std::string> cur = PipeAPI::PipeNamePipe.ReadPipe();
+    cur.push_back(name);
+    PipeAPI::PipeNamePipe.WritePipe(cur);
+}

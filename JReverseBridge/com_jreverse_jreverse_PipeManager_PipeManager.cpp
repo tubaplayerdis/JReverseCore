@@ -21,7 +21,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManage
     //PipeAPI::PipeNamePipe.WritePipe(exdata);
    
 
-    JReversePipe<int> mypipe = JReversePipe<int>("MyPipe", boost::interprocess::read_write, 1000);
+    JReversePipe<int> mypipe = JReversePipe<int>("MyIntPipe", boost::interprocess::read_write, 1000);
+    PipeAPI::AddPipeToList("MyIntPipe");
     mypipe.WritePipe(345);
     int noway = mypipe.ReadPipe();
 
@@ -58,4 +59,34 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManage
 
     // Return the array
     return stringArray;
+}
+
+JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_AddPipe(JNIEnv* env, jclass, jstring name, jint size, jstring type)
+{
+    std::string pipname = env->GetStringUTFChars(name, false);
+    std::string a = env->GetStringUTFChars(type, false);
+    if (a == "int") {
+        JReversePipe<int> addpip = JReversePipe<int>(pipname, boost::interprocess::read_write, (int)size);
+        //TODO: add refrence
+    }
+    else if (a == "bool") {
+
+    }
+    else if (a == "float") {
+
+    }
+    else if (a == "double") {
+
+    }
+    else if (a == "std::string") {
+
+    }
+    else if (a == "std::vector<std::string>") {
+
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_RemovePipe(JNIEnv*, jclass, jstring name)
+{
+    return JNIEXPORT void JNICALL();
 }
