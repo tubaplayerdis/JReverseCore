@@ -132,6 +132,29 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStr
     SharedMemManager::WriteString(cstr);
 }
 
+JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_CallCoreFunction(JNIEnv* env, jclass, jstring name)
+{
+    std::string tocall = env->GetStringUTFChars(name, NULL);
+    PipeAPI::FunctionPipe.WritePipe(tocall);
+    while (PipeAPI::ReturnPipe.ReadPipe() == PipeAPI::noneVec)
+    {
+        Sleep(1);//what impl
+    }
+    std::vector<std::string> builda = PipeAPI::ReadReturnPipeAR();
+
+    // Find the class of java.lang.String
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray stringArray = env->NewObjectArray(builda.size(), stringClass, NULL);
+
+
+    for (int i = 0; i < builda.size(); i++) {
+        jstring string1 = env->NewStringUTF(builda[i].c_str());
+        env->SetObjectArrayElement(stringArray, i, string1);
+    }
+
+    return stringArray;
+}
+
 
 
 

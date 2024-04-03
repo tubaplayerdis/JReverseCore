@@ -5,18 +5,30 @@
 #include "Pipe.h"
 #include "JReversePipeInfo.h"
 
+std::vector<std::string> PipeAPI::noneVec = std::vector<std::string>{ "NONE" };
+std::string PipeAPI::noneStr = "NONE";
+
 JReversePipe<std::string> PipeAPI::FunctionPipe = JReversePipe<std::string>("CriticalCommunicationPipe", boost::interprocess::read_write, 1000);
+JReversePipe<std::vector<std::string>> PipeAPI::ReturnPipe = JReversePipe<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write, 1000);
 JReversePipe<std::vector<std::string>> PipeAPI::PipeNamePipe = JReversePipe<std::vector<std::string>>("CriticalPipeNamePipe", boost::interprocess::read_write, 1000);
 JReversePipe<std::string> PipeAPI::CommunicationPipe = JReversePipe<std::string>("CriticalFunctionPipe", boost::interprocess::read_write, 1000);
 
+
+void PipeAPI::NoneReturnPipe()
+{
+    PipeAPI::ReturnPipe.WritePipe(PipeAPI::noneVec);
+}
 
 void PipeAPI::setCritPipes()
 {
     std::vector<std::string> cur;
     cur.push_back(std::string("CriticalFunctionPipe:std::string"));
+    cur.push_back(std::string("CriticalReturnPipe:std::vector<std::string>"));
     cur.push_back(std::string("CriticalPipeNamePipe:std::vector<std::string>"));
     cur.push_back(std::string("CriticalCommunicationPipe:std::string"));
     PipeAPI::PipeNamePipe.WritePipe(cur);
+    PipeAPI::NoneReturnPipe();
+    PipeAPI::FunctionPipe.WritePipe(PipeAPI::noneStr);
 }
 
 std::vector<std::string> PipeAPI::GetAllPipeNames()
@@ -58,4 +70,11 @@ void PipeAPI::AddPipeToList(std::string name)
     std::vector<std::string> cur = PipeAPI::PipeNamePipe.ReadPipe();
     cur.push_back(name);
     PipeAPI::PipeNamePipe.WritePipe(cur);
+}
+
+std::vector<std::string> PipeAPI::ReadReturnPipeAR()
+{
+    std::vector<std::string> ret = PipeAPI::ReturnPipe.ReadPipe();
+    PipeAPI::NoneReturnPipe();
+    return ret;
 }

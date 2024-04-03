@@ -6,7 +6,10 @@
 #include <vector>
 #include <iostream>
 
+std::string PipeClientAPI::noneStr = "NONE";
+
 JReversePipeClient<std::string> PipeClientAPI::FunctionPipe = JReversePipeClient<std::string>("CriticalCommunicationPipe", boost::interprocess::read_write);
+JReversePipeClient<std::vector<std::string>> PipeClientAPI::ReturnPipe = JReversePipeClient<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write);
 JReversePipeClient<std::vector<std::string>> PipeClientAPI::PipeNamePipe = JReversePipeClient<std::vector<std::string>>("CriticalPipeNamePipe", boost::interprocess::read_write);
 JReversePipeClient<std::string> PipeClientAPI::CommunicationPipe = JReversePipeClient<std::string>("CriticalFunctionPipe", boost::interprocess::read_write);
 
@@ -37,6 +40,13 @@ std::string PipeClientAPI::GetPipeType(std::string name)
 		}
 	}
 	return "PipeNotFound";
+}
+
+std::string PipeClientAPI::ReadFunctionPipeAR()
+{
+	std::string cur = PipeClientAPI::FunctionPipe.ReadPipe();
+	PipeClientAPI::FunctionPipe.WritePipe(PipeClientAPI::noneStr);
+	return cur;
 }
 
 void PipeClientAPI::PrintPipes()

@@ -63,8 +63,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManage
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_AddPipe(JNIEnv* env, jclass, jstring name, jint size, jstring type)
 {
-    std::string pipname = env->GetStringUTFChars(name, false);
-    std::string a = env->GetStringUTFChars(type, false);
+    std::string pipname = env->GetStringUTFChars(name, NULL);
+    std::string a = env->GetStringUTFChars(type, NULL);
     if (a == "int") {
         JReversePipe<int> addpip = JReversePipe<int>(pipname, boost::interprocess::read_write, (int)size);
         //TODO: add refrence
@@ -88,5 +88,5 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_AddPip
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_RemovePipe(JNIEnv*, jclass, jstring name)
 {
-    return JNIEXPORT void JNICALL();
+    return;
 }

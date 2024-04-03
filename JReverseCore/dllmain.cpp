@@ -256,6 +256,21 @@ void MainThread(HMODULE instance)
     std::printf("Connecting to Client Pipe API...\n");
 
     PipeClientAPI::PrintPipes();
+
+    std::printf("Starting Function Call Loop");
+
+    while (true) {
+        while (PipeClientAPI::FunctionPipe.ReadPipe() == PipeClientAPI::noneStr) {
+            Sleep(1);
+        }
+        std::string tobe = PipeClientAPI::ReadFunctionPipeAR();
+        if (tobe == "TESTFUNC") {
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Hello", "World"});
+        }
+
+    }
+    
+
 }
 
 bool __stdcall DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
