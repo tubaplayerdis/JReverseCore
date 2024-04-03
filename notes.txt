@@ -2,4 +2,5 @@ NOTE: If the Bridge DLL is Updated, it has to be copied to the jreverse folder(m
 
 TODO:
 
-add "std::string" impl to client and server pipes but really just send memory as const char* like the shared mem manager and old Pipe Manager
+Make UI getting PID more fieldly via JNI.
+Impl Dynamic Reallocaation of JReversePipe's
