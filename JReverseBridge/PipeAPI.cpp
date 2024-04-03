@@ -5,13 +5,14 @@
 #include "Pipe.h"
 #include "JReversePipeInfo.h"
 
-std::vector<std::string> PipeAPI::noneVec = std::vector<std::string>{ "NONE" };
-std::string PipeAPI::noneStr = "NONE";
+const std::vector<std::string> PipeAPI::noneVec = std::vector<std::string>{ "NONE" };
+const std::string PipeAPI::noneStr = "NONE";
 
-JReversePipe<std::string> PipeAPI::FunctionPipe = JReversePipe<std::string>("CriticalCommunicationPipe", boost::interprocess::read_write, 1000);
-JReversePipe<std::vector<std::string>> PipeAPI::ReturnPipe = JReversePipe<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write, 1000);
+JReversePipe<std::string> PipeAPI::FunctionPipe = JReversePipe<std::string>("CriticalFunctionPipe", boost::interprocess::read_write, 1000);
+JReversePipe<std::vector<std::string>> PipeAPI::FunctionArgPipe = JReversePipe<std::vector<std::string>>("CriticalFunctionArgPipe", boost::interprocess::read_write, 1000);
+JReversePipe<std::vector<std::string>> PipeAPI::ReturnPipe = JReversePipe<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write, 500000);
 JReversePipe<std::vector<std::string>> PipeAPI::PipeNamePipe = JReversePipe<std::vector<std::string>>("CriticalPipeNamePipe", boost::interprocess::read_write, 1000);
-JReversePipe<std::string> PipeAPI::CommunicationPipe = JReversePipe<std::string>("CriticalFunctionPipe", boost::interprocess::read_write, 1000);
+JReversePipe<std::string> PipeAPI::CommunicationPipe = JReversePipe<std::string>("CriticalCommunicationPipe", boost::interprocess::read_write, 1000);
 
 
 void PipeAPI::NoneReturnPipe()
@@ -19,10 +20,21 @@ void PipeAPI::NoneReturnPipe()
     PipeAPI::ReturnPipe.WritePipe(PipeAPI::noneVec);
 }
 
+bool PipeAPI::isReturnPipeNone()
+{
+
+    auto vec = PipeAPI::ReturnPipe.ReadPipe();
+    if (vec[0] == "NONE") {
+        return true;
+    }
+    return false;
+}
+
 void PipeAPI::setCritPipes()
 {
     std::vector<std::string> cur;
     cur.push_back(std::string("CriticalFunctionPipe:std::string"));
+    cur.push_back(std::string("CriticalFunctionArgPipe:std::vector<std::string>"));
     cur.push_back(std::string("CriticalReturnPipe:std::vector<std::string>"));
     cur.push_back(std::string("CriticalPipeNamePipe:std::vector<std::string>"));
     cur.push_back(std::string("CriticalCommunicationPipe:std::string"));

@@ -12,8 +12,9 @@ class PipeAPI
 private:
     static void NoneReturnPipe();
 public:
-    static std::vector<std::string> noneVec;
-    static std::string noneStr;
+    static bool isReturnPipeNone();
+    static const std::vector<std::string> noneVec;
+    static const std::string noneStr;
     static void setCritPipes();
     static std::vector<std::string> GetAllPipeNames();//Read from PipeNamePipe
     static std::vector<JReversePipeInfo> GetAllPipesInfo();
@@ -23,6 +24,7 @@ public:
     static std::vector<std::string> ReadReturnPipeAR();
     //Critical Pipes
     static JReversePipe<std::string> FunctionPipe;
+    static JReversePipe<std::vector<std::string>> FunctionArgPipe;
     static JReversePipe<std::vector<std::string>> ReturnPipe;
     static JReversePipe<std::vector<std::string>> PipeNamePipe;
     static JReversePipe<std::string> CommunicationPipe;

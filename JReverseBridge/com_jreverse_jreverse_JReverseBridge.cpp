@@ -7,6 +7,8 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include "SharedMemManager.h"
 #include "PipeAPI.h"
+#include "JReverseLogger.h"
+
 
 bool Inject(DWORD pId, char* dllName)
 {
@@ -88,9 +90,15 @@ void CallFunctionOnInjectedDLL(const wchar_t* dllPath, const char* dllName, cons
 }
 
 
-JNIEXPORT jboolean JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_testMethod(JNIEnv*, jclass)
+JNIEXPORT jboolean JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_testMethod(JNIEnv* env, jclass)
 {
-	return jboolean(true);
+    return true;
+}
+
+JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InitBridge(JNIEnv* env, jclass)
+{
+    JReverseLogger logger = JReverseLogger(env);
+    logger.Log("Initalizing Bridge...");
 }
 
 JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InjectDLL(JNIEnv* jniEnv, jclass, jint PID, jstring Location)
@@ -132,13 +140,38 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStr
     SharedMemManager::WriteString(cstr);
 }
 
-JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_CallCoreFunction(JNIEnv* env, jclass, jstring name)
+JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_CallCoreFunction(JNIEnv* env, jclass, jstring name, jobjectArray args)
 {
+    JReverseLogger logger = JReverseLogger(env);
+    //Args
+    std::vector<std::string> topass;
+    jsize argslen = env->GetArrayLength(args);
+
+    for (int i = 0; i < argslen; i++) {
+        jstring string = (jstring)env->GetObjectArrayElement(args, i);
+        std::string check = env->GetStringUTFChars(string, NULL);
+        if (check == "NONE") {
+            topass = PipeAPI::noneVec;
+            break;
+        }
+        topass.push_back(check);
+        env->ReleaseStringUTFChars(string, check.c_str());
+        env->DeleteLocalRef(string);
+    }
+    PipeAPI::FunctionArgPipe.WritePipe(topass);
+
+    logger.Log("Wrote args to pipe");
+
+    //Function
     std::string tocall = env->GetStringUTFChars(name, NULL);
     PipeAPI::FunctionPipe.WritePipe(tocall);
-    while (PipeAPI::ReturnPipe.ReadPipe() == PipeAPI::noneVec)
+
+    logger.Log("Wrote function to pipe");
+
+    while (true)
     {
-        Sleep(1);//what impl
+        if (!PipeAPI::isReturnPipeNone()) break;
+        Sleep(10);
     }
     std::vector<std::string> builda = PipeAPI::ReadReturnPipeAR();
 
@@ -154,6 +187,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
 
     return stringArray;
 }
+
 
 
 

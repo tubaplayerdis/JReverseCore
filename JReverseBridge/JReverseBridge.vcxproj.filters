@@ -19,6 +19,12 @@
     <Filter Include="Source Files\pipe">
       <UniqueIdentifier>{b5103d8a-a8f5-4383-a865-99d6d8e5f583}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\logging">
+      <UniqueIdentifier>{6a9069f9-8652-4fd9-ac51-4efeed26b004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\logging">
+      <UniqueIdentifier>{c860ded8-4e32-46c2-a335-9a56f5af3322}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -45,6 +51,9 @@
     <ClInclude Include="JReversePipeHelper.h">
       <Filter>Header Files\Pipe</Filter>
     </ClInclude>
+    <ClInclude Include="JReverseLogger.h">
+      <Filter>Header Files\logging</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="com_jreverse_jreverse_JReverseBridge.cpp">
@@ -64,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="JReversePipeHelper.cpp">
       <Filter>Source Files\pipe</Filter>
+    </ClCompile>
+    <ClCompile Include="JReverseLogger.cpp">
+      <Filter>Source Files\logging</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

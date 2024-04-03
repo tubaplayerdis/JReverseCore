@@ -72,6 +72,11 @@ inline void JReversePipeClient<T>::WritePipe(const T& data)
         *ptr = '\0';
         return;
     }
+    else if constexpr (std::is_same_v<T, std::string>) {
+        std::string stt = data;
+        std::strcpy(static_cast<char*>(region.get_address()), stt.c_str());
+        return;
+    }
     std::memcpy(region.get_address(), &data, sizeof(T));
 }
 
@@ -119,6 +124,9 @@ inline T JReversePipeClient<T>::ReadPipe()
         }
         data = myStringVector;
 
+    }
+    else if constexpr (std::is_same_v <T, std::string>) {
+        return std::string(static_cast<const char*>(region.get_address()));
     }
     else
     {

@@ -257,23 +257,42 @@ void MainThread(HMODULE instance)
 
     PipeClientAPI::PrintPipes();
 
-    std::printf("Starting Function Call Loop");
+    std::printf("Starting Function Call Loop\n");
 
     while (true) {
-        while (PipeClientAPI::FunctionPipe.ReadPipe() == PipeClientAPI::noneStr) {
-            Sleep(1);
+        while (true) {            
+            if (!PipeClientAPI::isFunctionPipeNone()) {
+                std::printf("Function Call Detected!\n");
+                break;
+            }
+            Sleep(10);
         }
-        std::string tobe = PipeClientAPI::ReadFunctionPipeAR();
-        if (tobe == "TESTFUNC") {
+        std::printf("Looping Func\n");
+        std::string called = PipeClientAPI::ReadFunctionPipeAR();
+        std::vector<std::string> args = PipeClientAPI::ReadFunctionArgPipeAR();
+        if (called == "TESTFUNC") {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Hello", "World"});
         }
-
+        else if (called == "getLoadedClasses") {
+            std::vector<std::string> sus = getLoadedClassesSignatures(TIenv, jniEnv);
+            if (sus.size() * sizeof(std::string) > PipeClientAPI::ReturnPipe.GetInfo().Size) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"ERROR: ", "DATA TOO LARGE - ADJUST IN PIPE MANAGER", "SIZE OF DATA,PIPE", std::to_string((int)(sus.size() * sizeof(std::string))), std::to_string(PipeClientAPI::ReturnPipe.GetInfo().Size)});
+            }
+            else
+            {
+                PipeClientAPI::ReturnPipe.WritePipe(sus);
+            }
+            
+        }
+        else {
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
+        }
     }
     
 
 }
 
-bool __stdcall DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
+bool __stdcall DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 {
     static FILE* p_file{ nullptr };
     static std::thread main_thread;
@@ -283,7 +302,7 @@ bool __stdcall DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
         AllocConsole();
         freopen_s(&p_file, "CONOUT$", "w", stdout);
 
-        MainThread(instance);
+        CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MainThread, hinstance, 0, nullptr);
     }
     else if (reason == DLL_PROCESS_DETACH)
     {

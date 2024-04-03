@@ -149,6 +149,7 @@
     <ClInclude Include="com_jreverse_jreverse_JReverseBridge.h" />
     <ClInclude Include="com_jreverse_jreverse_PipeManager_PipeManager.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="JReverseLogger.h" />
     <ClInclude Include="JReversePipeHelper.h" />
     <ClInclude Include="JReversePipeInfo.h" />
     <ClInclude Include="Pipe.h" />
@@ -158,6 +159,7 @@
   <ItemGroup>
     <ClCompile Include="com_jreverse_jreverse_JReverseBridge.cpp" />
     <ClCompile Include="com_jreverse_jreverse_PipeManager_PipeManager.cpp" />
+    <ClCompile Include="JReverseLogger.cpp" />
     <ClCompile Include="JReversePipeHelper.cpp" />
     <ClCompile Include="Pipe.cpp" />
     <ClCompile Include="PipeAPI.cpp" />
