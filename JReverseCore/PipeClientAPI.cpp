@@ -7,6 +7,7 @@
 #include <iostream>
 
 const std::vector<std::string> PipeClientAPI::noneVec = std::vector<std::string>{ "NONE" };
+const std::vector<std::string> PipeClientAPI::noneInstacneVec = std::vector<std::string>{ "NO INSTANCES" };
 const std::string PipeClientAPI::noneStr = "NONE";
 
 JReversePipeClient<std::string> PipeClientAPI::FunctionPipe = JReversePipeClient<std::string>("CriticalFunctionPipe", boost::interprocess::read_write);

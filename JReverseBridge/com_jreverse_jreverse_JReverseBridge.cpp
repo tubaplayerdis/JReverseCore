@@ -143,6 +143,7 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStr
 JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_CallCoreFunction(JNIEnv* env, jclass, jstring name, jobjectArray args)
 {
     JReverseLogger logger = JReverseLogger(env);
+    logger.Log("Starting Function Call");
     //Args
     std::vector<std::string> topass;
     jsize argslen = env->GetArrayLength(args);
@@ -154,10 +155,14 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
             topass = PipeAPI::noneVec;
             break;
         }
+        logger.Log(check);
         topass.push_back(check);
-        env->ReleaseStringUTFChars(string, check.c_str());
-        env->DeleteLocalRef(string);
+        //env->ReleaseStringUTFChars(string, check.c_str());
+        logger.Log("Released Args");
     }
+
+    logger.Log("Writing args...");
+
     PipeAPI::FunctionArgPipe.WritePipe(topass);
 
     logger.Log("Wrote args to pipe");
@@ -171,6 +176,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
     while (true)
     {
         if (!PipeAPI::isReturnPipeNone()) break;
+        logger.Log("Waiting on callback");
         Sleep(10);
     }
     std::vector<std::string> builda = PipeAPI::ReadReturnPipeAR();

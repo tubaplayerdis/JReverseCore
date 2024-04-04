@@ -10,6 +10,7 @@ public:
     static bool isFunctionArgPipeNone();
     static const std::string noneStr;
     static const std::vector<std::string> noneVec;
+    static const std::vector<std::string> noneInstacneVec;
     static std::vector<std::string> GetAllPipes();
     static bool CheckForPipe(std::string pipename);
     static std::string GetPipeType(std::string name);

@@ -155,6 +155,44 @@ bool CheckAndPrintError(jvmtiError error)
     }
 }
 
+static jvmtiIterationControl JNICALL
+heap_callback(jlong class_tag, jlong size, jlong* tag_ptr, void* user_data) {
+    *tag_ptr = 1;
+    return JVMTI_ITERATION_CONTINUE;
+}
+
+std::vector<std::string> getClassInstances(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::string clazz) {
+    std::vector<std::string> GlobalVector;
+    jclass cladd = jniEnv->FindClass(clazz.c_str());
+    if (cladd == nullptr) {
+        return std::vector<std::string> {"Class", "Not Found"};
+    }
+
+    jvmtiError iterr = TIenv->IterateOverInstancesOfClass(cladd, JVMTI_HEAP_OBJECT_EITHER, heap_callback, NULL);
+    std::printf("Error Code Of Iterate:\n");
+    std::printf(GetJVMTIError(iterr));
+    std::printf("\n");
+
+    jint count = 0;
+    jobject* objs;
+    jlong tag = 1;
+    jvmtiError err = TIenv->GetObjectsWithTags(1, &tag, &count, &objs, NULL);
+    std::printf("Error Code Of GetOBJ:\n");
+    bool ifer = CheckAndPrintError(err);
+    std::printf("\n");
+
+    std::printf("Class Requested OBJ Count:\n");
+    std::printf(std::to_string((int)count).c_str());
+    std::printf("\n");
+
+    if (count == 0) return std::vector<std::string> {"NO INSTANCES"};
+
+    for (int i = 0; i < count; i++) {
+        GlobalVector.push_back(std::to_string(i));
+    }
+    return GlobalVector;
+}
+
 
 std::vector<std::string> getLoadedClassesSignatures(jvmtiEnv* TIenv, JNIEnv* jniEnv) {
     std::vector<std::string> returnvec;
@@ -184,6 +222,76 @@ std::vector<std::string> getLoadedClassesSignatures(jvmtiEnv* TIenv, JNIEnv* jni
         }
     }
     return returnvec;
+}
+
+std::vector<std::string> getClassMethods(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::string clazz) {
+    std::vector<std::string> GlobalVector;
+    jclass cladd = jniEnv->FindClass(clazz.c_str());
+    if (cladd == nullptr) {
+        return std::vector<std::string> {"Class", "Not Found"};
+    }
+
+    if (getClassInstances(TIenv, jniEnv, clazz)[0] == "NO INSTANCES") return PipeClientAPI::noneInstacneVec;
+
+    jint mcount = 0;
+    jmethodID* meths;
+    jvmtiError tferr = TIenv->GetClassMethods(cladd, &mcount, &meths);
+    std::printf("Error Code Of GetClassMethods:\n");
+    std::printf(GetJVMTIError(tferr));
+    std::printf("\n");
+
+
+
+    for (int t = 0; t < mcount; t++) {
+        char* nameofMeth;
+        char* nameofSig;
+        TIenv->GetMethodName(meths[t], &nameofMeth, &nameofSig, NULL);
+        std::string nameb = std::string(nameofMeth);
+        TIenv->Deallocate((unsigned char*)nameofMeth);
+        std::string names = std::string(nameofSig);
+        TIenv->Deallocate((unsigned char*)nameofSig);
+
+        GlobalVector.push_back(nameb + names);
+    }
+
+    return GlobalVector;
+}
+
+std::vector<std::string> getClassFields(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::string clazz) {
+    std::vector<std::string> GlobalVector;
+    jclass cladd = jniEnv->FindClass(clazz.c_str());
+    if (cladd == nullptr) {
+        return std::vector<std::string> {"Class", "Not Found"};
+    }
+
+    
+    if (getClassInstances(TIenv, jniEnv, clazz)[0] == "NO INSTANCES") return PipeClientAPI::noneInstacneVec;
+
+    std::printf("Getting class fields of: ");
+    std::printf(clazz.c_str());
+    std::printf("\n");
+
+    jint fcount = 0;
+    jfieldID* feths;
+    jvmtiError tterr = TIenv->GetClassFields(cladd, &fcount, &feths);
+    std::printf("Error Code Of GetClassFields:\n");
+    std::printf(GetJVMTIError(tterr));
+    std::printf("\n");
+
+
+
+    for (int t = 0; t < fcount; t++) {
+        char* nameoffeth;
+        char* fethsig;
+        TIenv->GetFieldName(cladd, feths[t], &nameoffeth, &fethsig, NULL);
+        std::string namef = std::string(nameoffeth);
+        std::string namev = std::string(fethsig);
+        TIenv->Deallocate((unsigned char*)nameoffeth);
+        TIenv->Deallocate((unsigned char*)fethsig);
+        GlobalVector.push_back(namef + " SIG: " + namev);
+    }
+
+    return GlobalVector;
 }
 
 
@@ -283,6 +391,19 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(sus);
             }
             
+        }
+        else if (called == "getClassMethods") {
+            std::printf("Getting Class Methods\n");
+            PipeClientAPI::ReturnPipe.WritePipe(getClassMethods(TIenv, jniEnv, args[0]));
+        }
+        else if (called == "getClassFields") {
+            std::printf("Getting Class Fields\n");
+            PipeClientAPI::ReturnPipe.WritePipe(getClassFields(TIenv, jniEnv, args[0]));
+        }
+        else if (called == "getClassInstances") {
+            std::printf("Getting Class Instacnes\n");
+            PipeClientAPI::ReturnPipe.WritePipe(getClassInstances(TIenv, jniEnv, args[0]));
+            std::printf("Returned Class Instacnes\n");
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
