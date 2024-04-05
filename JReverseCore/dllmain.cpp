@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 #include "PipeManager.h"
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include "PipeClientAPI.h"
@@ -168,6 +169,7 @@ std::vector<std::string> getClassInstances(jvmtiEnv* TIenv, JNIEnv* jniEnv, std:
         return std::vector<std::string> {"Class", "Not Found"};
     }
 
+
     jvmtiError iterr = TIenv->IterateOverInstancesOfClass(cladd, JVMTI_HEAP_OBJECT_EITHER, heap_callback, NULL);
     std::printf("Error Code Of Iterate:\n");
     std::printf(GetJVMTIError(iterr));
@@ -185,11 +187,11 @@ std::vector<std::string> getClassInstances(jvmtiEnv* TIenv, JNIEnv* jniEnv, std:
     std::printf(std::to_string((int)count).c_str());
     std::printf("\n");
 
+    TIenv->Deallocate((unsigned char*)objs);
+
     if (count == 0) return std::vector<std::string> {"NO INSTANCES"};
 
-    for (int i = 0; i < count; i++) {
-        GlobalVector.push_back(std::to_string(i));
-    }
+    GlobalVector.push_back(std::to_string(count));
     return GlobalVector;
 }
 
@@ -231,8 +233,6 @@ std::vector<std::string> getClassMethods(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::s
         return std::vector<std::string> {"Class", "Not Found"};
     }
 
-    if (getClassInstances(TIenv, jniEnv, clazz)[0] == "NO INSTANCES") return PipeClientAPI::noneInstacneVec;
-
     jint mcount = 0;
     jmethodID* meths;
     jvmtiError tferr = TIenv->GetClassMethods(cladd, &mcount, &meths);
@@ -241,21 +241,40 @@ std::vector<std::string> getClassMethods(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::s
     std::printf("\n");
 
 
-
+    std::vector<std::string> StaticVec = {" ","STATIC:"," "};
+    std::vector<std::string> NonStaticVec = {" ","NON STATIC:"," "};
     for (int t = 0; t < mcount; t++) {
-        char* nameofMeth;
-        char* nameofSig;
-        TIenv->GetMethodName(meths[t], &nameofMeth, &nameofSig, NULL);
-        std::string nameb = std::string(nameofMeth);
-        TIenv->Deallocate((unsigned char*)nameofMeth);
-        std::string names = std::string(nameofSig);
-        TIenv->Deallocate((unsigned char*)nameofSig);
-
-        GlobalVector.push_back(nameb + names);
+        jint modifier;
+        TIenv->GetMethodModifiers(meths[t], &modifier);
+        //Why does this work?
+        if ((modifier & 0x0008) != 0) {
+            char* nameofMeth;
+            char* nameofSig;
+            TIenv->GetMethodName(meths[t], &nameofMeth, &nameofSig, NULL);
+            std::string nameb = std::string(nameofMeth);
+            TIenv->Deallocate((unsigned char*)nameofMeth);
+            std::string names = std::string(nameofSig);
+            TIenv->Deallocate((unsigned char*)nameofSig);
+            StaticVec.push_back(nameb + names);
+        }
+        else
+        {
+            char* nameofMeth;
+            char* nameofSig;
+            TIenv->GetMethodName(meths[t], &nameofMeth, &nameofSig, NULL);
+            std::string nameb = std::string(nameofMeth);
+            TIenv->Deallocate((unsigned char*)nameofMeth);
+            std::string names = std::string(nameofSig);
+            TIenv->Deallocate((unsigned char*)nameofSig);
+            NonStaticVec.push_back(nameb + names);
+        }
     }
 
+    StaticVec.insert(StaticVec.end(), NonStaticVec.begin(), NonStaticVec.end());
+    GlobalVector = StaticVec;
     return GlobalVector;
 }
+
 
 std::vector<std::string> getClassFields(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::string clazz) {
     std::vector<std::string> GlobalVector;
@@ -263,9 +282,6 @@ std::vector<std::string> getClassFields(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::st
     if (cladd == nullptr) {
         return std::vector<std::string> {"Class", "Not Found"};
     }
-
-    
-    if (getClassInstances(TIenv, jniEnv, clazz)[0] == "NO INSTANCES") return PipeClientAPI::noneInstacneVec;
 
     std::printf("Getting class fields of: ");
     std::printf(clazz.c_str());
@@ -279,19 +295,74 @@ std::vector<std::string> getClassFields(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::st
     std::printf("\n");
 
 
-
+    std::vector<std::string> StaticVec = {" ","STATIC:"," "};
+    std::vector<std::string> NonStaticVec = {" ","NON STATIC:"," "};
     for (int t = 0; t < fcount; t++) {
-        char* nameoffeth;
-        char* fethsig;
-        TIenv->GetFieldName(cladd, feths[t], &nameoffeth, &fethsig, NULL);
-        std::string namef = std::string(nameoffeth);
-        std::string namev = std::string(fethsig);
-        TIenv->Deallocate((unsigned char*)nameoffeth);
-        TIenv->Deallocate((unsigned char*)fethsig);
-        GlobalVector.push_back(namef + " : " + namev);
+        std::string modi;
+        jint modifier;
+        TIenv->GetFieldModifiers(cladd,feths[t], &modifier);
+        if ((modifier & 0x0008) != 0) 
+        {
+            char* nameoffeth;
+            char* fethsig;
+            TIenv->GetFieldName(cladd, feths[t], &nameoffeth, &fethsig, NULL);
+            std::string namef = std::string(nameoffeth);
+            std::string namev = std::string(fethsig);
+            TIenv->Deallocate((unsigned char*)nameoffeth);
+            TIenv->Deallocate((unsigned char*)fethsig);
+            StaticVec.push_back(namef + " : " + namev);
+        }
+        else 
+        {
+            char* nameoffeth;
+            char* fethsig;
+            TIenv->GetFieldName(cladd, feths[t], &nameoffeth, &fethsig, NULL);
+            std::string namef = std::string(nameoffeth);
+            std::string namev = std::string(fethsig);
+            TIenv->Deallocate((unsigned char*)nameoffeth);
+            TIenv->Deallocate((unsigned char*)fethsig);
+            NonStaticVec.push_back(namef + " : " + namev);
+        }
     }
 
+    StaticVec.insert(StaticVec.end(), NonStaticVec.begin(), NonStaticVec.end());
+    GlobalVector = StaticVec;
     return GlobalVector;
+}
+
+std::vector<std::string> getMethodBytecodes(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::string clazz, std::string func, std::string sig, std::string statictag) {
+    std::vector<std::string> ReturnVector;
+    jclass cladd = jniEnv->FindClass(clazz.c_str());
+    if (cladd == nullptr) {
+        return std::vector<std::string> {"Class", "Not Found"};
+    }
+    jmethodID methodid;
+    if (statictag == "true") {
+        methodid = jniEnv->GetStaticMethodID(cladd, func.c_str(), sig.c_str());
+    }
+    else
+    {
+        methodid = jniEnv->GetMethodID(cladd, func.c_str(), sig.c_str());
+    }
+    if (methodid == nullptr) {
+        return std::vector<std::string> {"Method", "Not Found"};
+    }
+
+    //Get bytecodes
+    unsigned char* bytecodes;
+    jint bytecode_length;
+    jvmtiError error = TIenv->GetBytecodes(methodid, &bytecode_length, &bytecodes);
+    if (error != JVMTI_ERROR_NONE) {
+        std::cout << "Error Getting Bytecodes:" << error << "\n";
+        return std::vector<std::string> { "ByteCodes", "Cant Get" };
+    }
+
+    std::string bytecodeString(reinterpret_cast<char*>(bytecodes));
+    
+
+    TIenv->Deallocate((unsigned char*)bytecodes);
+
+    return std::vector<std::string> {bytecodeString};
 }
 
 
@@ -348,6 +419,7 @@ void MainThread(HMODULE instance)
     (void)memset(&capa, 0, sizeof(jvmtiCapabilities));
     capa.can_tag_objects = 1;
     capa.can_get_source_file_name = 1;
+    capa.can_get_bytecodes = 1;
 
     jvmtiError erro;
     erro = TIenv->AddCapabilities(&capa);
@@ -404,6 +476,8 @@ void MainThread(HMODULE instance)
             std::printf("Getting Class Instacnes\n");
             PipeClientAPI::ReturnPipe.WritePipe(getClassInstances(TIenv, jniEnv, args[0]));
             std::printf("Returned Class Instacnes\n");
+        }
+        else if (called == "getMethodBytecodes") {
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});

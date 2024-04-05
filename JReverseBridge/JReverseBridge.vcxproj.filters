@@ -60,9 +60,6 @@
     <ClInclude Include="JReverseLogger.h">
       <Filter>Header Files\logging</Filter>
     </ClInclude>
-    <ClInclude Include="JReversePY.cpp">
-      <Filter>Source Files\Python</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="com_jreverse_jreverse_JReverseBridge.cpp">
