@@ -1,10 +1,12 @@
 NOTE: If the Bridge DLL is Updated, it has to be copied to the jreverse folder(more like replaces) for updates to work becuase it uses that dll: C:\Users\aaron\IdeaProjects\jreverse
 
 IDEAS:
-Add scripting impl with java as the language and auto link to loaded binaries, but also so people can script and execute whatever with it. This would require a way to accses the classes already present from java
-(DO THIS FIRST)Also implement python as a beginner version of the scripter, allowing functions to be called with intergal types and responses.(DO THIS FIRST)
+Add abolity to load class files into the peogram via the UI. also have special API/Package to accses instanced/already running classes+methods/fields
+(DO THIS FIRST)Also implement javascript as a beginner version of the scripter, allowing functions to be called with intergal types and responses. maybe can use for more powerful applications. (DO THIS FIRST)
 Scripting Documentation can be in plain html
 
 TODO:
+
+Get Bytecode of functions and send them off. 
 
 Impl Dynamic Reallocaation of JReversePipe's
