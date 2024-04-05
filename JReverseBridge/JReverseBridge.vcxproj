@@ -154,6 +154,7 @@
     <ClInclude Include="JReversePipeInfo.h" />
     <ClInclude Include="Pipe.h" />
     <ClInclude Include="PipeAPI.h" />
+    <ClInclude Include="JReversePY.cpp" />
     <ClInclude Include="SharedMemManager.h" />
   </ItemGroup>
   <ItemGroup>

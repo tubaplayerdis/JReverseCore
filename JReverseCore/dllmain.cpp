@@ -288,7 +288,7 @@ std::vector<std::string> getClassFields(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::st
         std::string namev = std::string(fethsig);
         TIenv->Deallocate((unsigned char*)nameoffeth);
         TIenv->Deallocate((unsigned char*)fethsig);
-        GlobalVector.push_back(namef + " SIG: " + namev);
+        GlobalVector.push_back(namef + " : " + namev);
     }
 
     return GlobalVector;

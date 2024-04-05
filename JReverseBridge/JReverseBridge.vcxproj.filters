@@ -25,6 +25,12 @@
     <Filter Include="Header Files\logging">
       <UniqueIdentifier>{c860ded8-4e32-46c2-a335-9a56f5af3322}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Python">
+      <UniqueIdentifier>{cc4ef0df-32df-4fbe-8d14-c742b8d3b120}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Python">
+      <UniqueIdentifier>{0ab6c5e5-311b-4f0c-a0f1-d3b02e244128}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -53,6 +59,9 @@
     </ClInclude>
     <ClInclude Include="JReverseLogger.h">
       <Filter>Header Files\logging</Filter>
+    </ClInclude>
+    <ClInclude Include="JReversePY.cpp">
+      <Filter>Source Files\Python</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
