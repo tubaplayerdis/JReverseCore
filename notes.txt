@@ -3,6 +3,7 @@ NOTE: If the Bridge DLL is Updated, it has to be copied to the jreverse folder(m
 IDEAS:
 Add scripting impl with java as the language and auto link to loaded binaries, but also so people can script and execute whatever with it. This would require a way to accses the classes already present from java
 (DO THIS FIRST)Also implement python as a beginner version of the scripter, allowing functions to be called with intergal types and responses.(DO THIS FIRST)
+Scripting Documentation can be in plain html
 
 TODO:
 
