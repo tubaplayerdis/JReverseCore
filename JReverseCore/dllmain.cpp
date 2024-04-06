@@ -357,7 +357,14 @@ std::vector<std::string> getMethodBytecodes(jvmtiEnv* TIenv, JNIEnv* jniEnv, std
         return std::vector<std::string> { "ByteCodes", "Cant Get" };
     }
 
-    std::string bytecodeString(reinterpret_cast<char*>(bytecodes));
+    std::cout << "Getting Bytecodes of: " << func;
+
+    std::string bytecodeString;
+    for (int i = 0; i < bytecode_length; i++) {
+        bytecodeString += (i == 0 ? "" : " "); // Add space separator, except for the first byte
+        bytecodeString += "0123456789ABCDEF"[bytecodes[i] >> 4]; // High nibble
+        bytecodeString += "0123456789ABCDEF"[bytecodes[i] & 0x0F]; // Low nibble
+    }
     
 
     TIenv->Deallocate((unsigned char*)bytecodes);
@@ -478,6 +485,11 @@ void MainThread(HMODULE instance)
             std::printf("Returned Class Instacnes\n");
         }
         else if (called == "getMethodBytecodes") {
+            std::printf("Getting Class Fields\n");
+            PipeClientAPI::ReturnPipe.WritePipe(getMethodBytecodes(TIenv, jniEnv, args[0], args[1], args[2], args[3]));
+        }
+        else if (called == "getClassBytecodes") {
+            //impl using jvmti->GetConstantPool
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});

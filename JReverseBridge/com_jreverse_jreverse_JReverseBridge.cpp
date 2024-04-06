@@ -173,11 +173,17 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
 
     logger.Log("Wrote function to pipe");
 
+    int z = 0;
     while (true)
     {
+        if (z > logger.GetPipeCallBackLimit()) {
+            PipeAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Error: Callback Timed Out"});
+            break;
+        }
         if (!PipeAPI::isReturnPipeNone()) break;
         logger.Log("Waiting on callback");
         Sleep(10);
+        z++;
     }
     std::vector<std::string> builda = PipeAPI::ReadReturnPipeAR();
 
