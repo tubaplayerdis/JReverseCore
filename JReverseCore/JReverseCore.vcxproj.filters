@@ -19,6 +19,12 @@
     <Filter Include="Source Files\PipeUtils">
       <UniqueIdentifier>{017fff31-2250-4e2d-b725-676c0db3d403}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ClassFileData">
+      <UniqueIdentifier>{8ea80aef-1e76-4445-8544-59b785e5b0fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ClassFileData">
+      <UniqueIdentifier>{1bfa5670-4b4e-4819-ae90-f8332ea3cf47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -42,6 +48,12 @@
     <ClInclude Include="PipeClientAPI.h">
       <Filter>Header Files\PipeUtils</Filter>
     </ClInclude>
+    <ClInclude Include="ClassFile.h">
+      <Filter>Header Files\ClassFileData</Filter>
+    </ClInclude>
+    <ClInclude Include="ClassFileManager.h">
+      <Filter>Header Files\ClassFileData</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -61,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="PipeClientAPI.cpp">
       <Filter>Source Files\PipeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="ClassFileManager.cpp">
+      <Filter>Source Files\ClassFileData</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

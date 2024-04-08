@@ -145,6 +145,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ClassFile.h" />
+    <ClInclude Include="ClassFileManager.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="JReversePipeClient.h" />
     <ClInclude Include="JReversePipeHelper.h" />
@@ -155,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\JReverseBridge\JReversePipeHelper.cpp" />
+    <ClCompile Include="ClassFileManager.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="JReversePipeHelper.cpp" />
     <ClCompile Include="pch.cpp">

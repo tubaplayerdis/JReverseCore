@@ -10,9 +10,12 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 #include "PipeManager.h"
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include "PipeClientAPI.h"
+#include "ClassFile.h"
+#include "ClassFileManager.h"
 
 
 
@@ -155,6 +158,37 @@ bool CheckAndPrintError(jvmtiError error)
         return false;
     }
 }
+
+
+void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass class_being_redefined, jobject loader, const char* name, jobject protection_domain, jint class_data_len, const unsigned char* class_data, jint* new_class_data_len, unsigned char** new_class_data) {
+    
+    //Verify Data
+    if (class_data_len <= 0 || class_data == nullptr || name == nullptr) {
+        // Invalid arguments, log an error and return
+        std::cout << "Invalid arguments in ClassFileLoadHook: " << JVMTI_ERROR_NULL_POINTER << std::endl;
+        return;
+    }
+
+
+    // Perform actions when a class file is loaded
+    std::cout << "Class loaded: " << name << "\n";
+
+
+
+    // Print the bytecode of the loaded class
+    std::vector<unsigned char> bytecode(class_data, class_data + class_data_len);
+    std::stringstream toadd;
+    for (unsigned char byte : bytecode) {
+        toadd << std::hex << static_cast<int>(byte);
+    }
+    
+    ClassFile curfile;
+    curfile.bytecodes = toadd.str();
+    curfile.classname = name;
+    ClassFileManager::AddClassFile(curfile);
+
+}
+
 
 static jvmtiIterationControl JNICALL
 heap_callback(jlong class_tag, jlong size, jlong* tag_ptr, void* user_data) {
@@ -359,17 +393,16 @@ std::vector<std::string> getMethodBytecodes(jvmtiEnv* TIenv, JNIEnv* jniEnv, std
 
     std::cout << "Getting Bytecodes of: " << func;
 
-    std::string bytecodeString;
+    std::stringstream bytecodeString;
     for (int i = 0; i < bytecode_length; i++) {
-        bytecodeString += (i == 0 ? "" : " "); // Add space separator, except for the first byte
-        bytecodeString += "0123456789ABCDEF"[bytecodes[i] >> 4]; // High nibble
-        bytecodeString += "0123456789ABCDEF"[bytecodes[i] & 0x0F]; // Low nibble
+        bytecodeString << std::hex << std::stoi(std::to_string(bytecodes[i]));
+        //bytecodeString << " ";
     }
     
 
     TIenv->Deallocate((unsigned char*)bytecodes);
 
-    return std::vector<std::string> {bytecodeString};
+    return std::vector<std::string> {bytecodeString.str()};
 }
 
 
@@ -427,6 +460,7 @@ void MainThread(HMODULE instance)
     capa.can_tag_objects = 1;
     capa.can_get_source_file_name = 1;
     capa.can_get_bytecodes = 1;
+    capa.can_generate_all_class_hook_events = 1;
 
     jvmtiError erro;
     erro = TIenv->AddCapabilities(&capa);
@@ -436,6 +470,28 @@ void MainThread(HMODULE instance)
         std::printf(GetJVMTIError(erro));
         std::printf("\n");
     }
+
+    ClassFileManager::init();
+
+    //For class file hooks
+    // Set event callbacks
+    jvmtiEventCallbacks callbacks;
+    (void)memset(&callbacks, 0, sizeof(callbacks));
+    callbacks.ClassFileLoadHook = &ClassFileLoadHook;
+    jvmtiError error = TIenv->SetEventCallbacks(&callbacks, sizeof(callbacks));
+    if (error != JVMTI_ERROR_NONE) {
+        std::cerr << "Error setting event callbacks" << std::endl;
+        return;
+    }
+
+    // Enable necessary events
+    jvmtiError errort = TIenv->SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, nullptr);
+    if (errort != JVMTI_ERROR_NONE) {
+        std::cerr << "Error enabling event notifications" << std::endl;
+        return;
+    }
+
+    std::printf("Enabeld Class file load hooks\n");
 
 
     std::printf("Successfully connected to the Java VM\n");
@@ -489,7 +545,15 @@ void MainThread(HMODULE instance)
             PipeClientAPI::ReturnPipe.WritePipe(getMethodBytecodes(TIenv, jniEnv, args[0], args[1], args[2], args[3]));
         }
         else if (called == "getClassBytecodes") {
-            //impl using jvmti->GetConstantPool
+            std::printf("Getting Class Bytecodes");
+            ClassFile found = ClassFileManager::FindClassFile(args[0]);
+            if (found.classname == "NOT FOUND") {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Class File Not Found", "Class File Not Found"});
+            }
+            else
+            {               
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {found.classname, found.bytecodes});
+            }        
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});

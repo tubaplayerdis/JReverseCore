@@ -177,7 +177,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
     while (true)
     {
         if (z > logger.GetPipeCallBackLimit()) {
-            PipeAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Error: Callback Timed Out"});
+            PipeAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Error: Callback Timed Out", "Error: Callback Timed Out", "Error: Callback Timed Out", "Error: Callback Timed Out"});
             break;
         }
         if (!PipeAPI::isReturnPipeNone()) break;
