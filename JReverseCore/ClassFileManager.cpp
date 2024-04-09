@@ -6,6 +6,9 @@
 #include <iostream>
 #include <windows.h>
 #include <synchapi.h>
+#include <mutex> // For std::mutex
+
+std::mutex mtx;
 
 std::vector<ClassFile> ClassFileManager::ClassFilesList = std::vector<ClassFile>{};
 
@@ -24,6 +27,6 @@ void ClassFileManager::init()
 
 void ClassFileManager::AddClassFile(ClassFile classfile)
 {
-    Sleep(1);
+    std::lock_guard<std::mutex> lock(mtx);
     ClassFileManager::ClassFilesList.push_back(classfile);
 }

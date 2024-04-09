@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
 #include "PipeManager.h"
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include "PipeClientAPI.h"
@@ -161,32 +162,40 @@ bool CheckAndPrintError(jvmtiError error)
 
 
 void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass class_being_redefined, jobject loader, const char* name, jobject protection_domain, jint class_data_len, const unsigned char* class_data, jint* new_class_data_len, unsigned char** new_class_data) {
-    
+        
+
     //Verify Data
-    if (class_data_len <= 0 || class_data == nullptr || name == nullptr) {
+    if (class_data_len <= 0 || class_data == nullptr) {
         // Invalid arguments, log an error and return
-        std::cout << "Invalid arguments in ClassFileLoadHook: " << JVMTI_ERROR_NULL_POINTER << std::endl;
+        std::cout << "Invalid arguments in ClassFileLoadHook: " << std::endl;
+    }
+
+    if (class_being_redefined == nullptr) {
+        std::cout << "New Class Load" << std::endl;
+    }
+    else {
+        std::cout << "Class Redefenition" << std::endl;
+    }
+
+    if (name == nullptr) {
+        std::cout << "Name is NULL. Abandoning." << std::endl;
         return;
     }
 
-
     // Perform actions when a class file is loaded
-    std::cout << "Class loaded: " << name << "\n";
-
-
+    std::cout << "Loading Class: " << name << "\n";
 
     // Print the bytecode of the loaded class
     std::vector<unsigned char> bytecode(class_data, class_data + class_data_len);
     std::stringstream toadd;
     for (unsigned char byte : bytecode) {
-        toadd << std::hex << static_cast<int>(byte);
+        toadd << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
     }
     
     ClassFile curfile;
     curfile.bytecodes = toadd.str();
     curfile.classname = name;
     ClassFileManager::AddClassFile(curfile);
-
 }
 
 
@@ -460,6 +469,7 @@ void MainThread(HMODULE instance)
     capa.can_tag_objects = 1;
     capa.can_get_source_file_name = 1;
     capa.can_get_bytecodes = 1;
+    capa.can_retransform_classes = 1;
     capa.can_generate_all_class_hook_events = 1;
 
     jvmtiError erro;
