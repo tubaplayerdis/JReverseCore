@@ -158,7 +158,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
         logger.Log(check);
         topass.push_back(check);
         //env->ReleaseStringUTFChars(string, check.c_str());
-        logger.Log("Released Args");
+        logger.Log("Released Args Chars");
     }
 
     logger.Log("Writing args...");

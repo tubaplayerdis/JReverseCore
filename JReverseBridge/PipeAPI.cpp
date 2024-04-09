@@ -9,7 +9,7 @@ const std::vector<std::string> PipeAPI::noneVec = std::vector<std::string>{ "NON
 const std::string PipeAPI::noneStr = "NONE";
 
 JReversePipe<std::string> PipeAPI::FunctionPipe = JReversePipe<std::string>("CriticalFunctionPipe", boost::interprocess::read_write, 1000);
-JReversePipe<std::vector<std::string>> PipeAPI::FunctionArgPipe = JReversePipe<std::vector<std::string>>("CriticalFunctionArgPipe", boost::interprocess::read_write, 1000);
+JReversePipe<std::vector<std::string>> PipeAPI::FunctionArgPipe = JReversePipe<std::vector<std::string>>("CriticalFunctionArgPipe", boost::interprocess::read_write, 500000);
 JReversePipe<std::vector<std::string>> PipeAPI::ReturnPipe = JReversePipe<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write, 500000);
 JReversePipe<std::vector<std::string>> PipeAPI::PipeNamePipe = JReversePipe<std::vector<std::string>>("CriticalPipeNamePipe", boost::interprocess::read_write, 1000);
 JReversePipe<std::string> PipeAPI::CommunicationPipe = JReversePipe<std::string>("CriticalCommunicationPipe", boost::interprocess::read_write, 1000);

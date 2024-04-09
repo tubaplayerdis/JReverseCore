@@ -167,7 +167,7 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     //Verify Data
     if (class_data_len <= 0 || class_data == nullptr) {
         // Invalid arguments, log an error and return
-        std::cout << "Invalid arguments in ClassFileLoadHook: " << std::endl;
+        std::cout << "Invalid Class, Abandoning" << std::endl;
     }
 
     if (class_being_redefined == nullptr) {
@@ -178,8 +178,8 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     }
 
     if (name == nullptr) {
-        std::cout << "Name is NULL. Abandoning." << std::endl;
-        return;
+        std::cout << "Name is NULL. Sending to Unresolved" << std::endl;
+        name = "unknown";
     }
 
     // Perform actions when a class file is loaded
@@ -189,9 +189,9 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     std::vector<unsigned char> bytecode(class_data, class_data + class_data_len);
     std::stringstream toadd;
     for (unsigned char byte : bytecode) {
-        toadd << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+        toadd << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
     }
-    
+
     ClassFile curfile;
     curfile.bytecodes = toadd.str();
     curfile.classname = name;
@@ -564,6 +564,22 @@ void MainThread(HMODULE instance)
             {               
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {found.classname, found.bytecodes});
             }        
+        }
+        else if (called == "getUnknownClassFiles") {
+            PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetUnknownClassFiles());
+        }
+        else if (called == "setUnknownClassFiles") {
+            std::printf("Deleting Unknown Classes");
+            ClassFileManager::DeleteUnknownClassFiles();
+            std::printf("Setting Unresolved Bytecodes");
+            for (size_t i = 0; i < args.size(); i+=2) {
+                ClassFile sendof;
+                sendof.classname = args[i];
+                sendof.bytecodes = args[i+1];
+                std::cout << "Resolved Class: " << sendof.classname << std::endl;
+                ClassFileManager::AddClassFile(sendof);
+            }
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Sucsessfull!"});
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
