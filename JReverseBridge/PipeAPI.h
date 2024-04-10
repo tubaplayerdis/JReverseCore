@@ -17,7 +17,7 @@ public:
     static const std::string noneStr;
     static void setCritPipes();
     static std::vector<std::string> GetAllPipeNames();//Read from PipeNamePipe
-    static std::vector<JReversePipeInfo> GetAllPipesInfo();
+    static JReversePipeInfo GetPipeInfo(std::string name);
     static bool CheckForPipe(std::string name);
     static std::string GetPipeType(std::string name);
     static void AddPipeToList(std::string name);

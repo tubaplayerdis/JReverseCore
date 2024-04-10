@@ -584,6 +584,10 @@ void MainThread(HMODULE instance)
         else if (called == "getClassFileNames") {
             PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetClassFileNames());
         }
+        else if (called == "uninjectCore") {
+            std::cout << "uninjectingJReverse" << std::endl;
+            break;
+        }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
         }

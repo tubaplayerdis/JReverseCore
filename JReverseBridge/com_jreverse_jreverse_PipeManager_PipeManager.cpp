@@ -61,6 +61,27 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManage
     return stringArray;
 }
 
+JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_GetPipeInfo(JNIEnv* env, jclass, jstring name)
+{
+    std::string pipname = env->GetStringUTFChars(name, NULL);
+    JReversePipeInfo pipinfo = PipeAPI::GetPipeInfo(pipname);
+    jclass stringClass = env->FindClass("java/lang/String");
+
+    // Create an empty array of strings
+    jobjectArray stringArray = env->NewObjectArray(3, stringClass, NULL);
+
+    jstring string1 = env->NewStringUTF("read/write");
+    env->SetObjectArrayElement(stringArray, 0, string1);
+
+    jstring string2 = env->NewStringUTF(pipinfo.Name.c_str());
+    env->SetObjectArrayElement(stringArray, 1, string2);
+
+    jstring string3 = env->NewStringUTF(std::to_string(pipinfo.Size).c_str());
+    env->SetObjectArrayElement(stringArray, 2, string3);
+
+    return stringArray;
+}
+
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_AddPipe(JNIEnv* env, jclass, jstring name, jint size, jstring type)
 {
     std::string pipname = env->GetStringUTFChars(name, NULL);

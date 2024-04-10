@@ -48,9 +48,18 @@ std::vector<std::string> PipeAPI::GetAllPipeNames()
     return PipeAPI::PipeNamePipe.ReadPipe();
 }
 
-std::vector<JReversePipeInfo> PipeAPI::GetAllPipesInfo()
+JReversePipeInfo PipeAPI::GetPipeInfo(std::string name)
 {
-    return std::vector<JReversePipeInfo>();
+    JReversePipeInfo defsend;
+    defsend.Mode = boost::interprocess::invalid_mode;
+    defsend.Name = "null";
+    defsend.Size = 0;
+    if (name == "CriticalFunctionPipe") return PipeAPI::FunctionPipe.GetInfo();
+    else if (name == "CriticalFunctionArgPipe") return PipeAPI::FunctionPipe.GetInfo();
+    else if (name == "CriticalReturnPipe") return PipeAPI::FunctionPipe.GetInfo();
+    else if (name == "CriticalPipeNamePipe") return PipeAPI::FunctionPipe.GetInfo();
+    else if (name == "CriticalCommunicationPipe") return PipeAPI::FunctionPipe.GetInfo();
+    else return defsend;
 }
 
 bool PipeAPI::CheckForPipe(std::string name)
