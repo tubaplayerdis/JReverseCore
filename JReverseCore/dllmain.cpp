@@ -581,6 +581,9 @@ void MainThread(HMODULE instance)
             }
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Sucsessfull!"});
         }
+        else if (called == "getClassFileNames") {
+            PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetClassFileNames());
+        }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
         }

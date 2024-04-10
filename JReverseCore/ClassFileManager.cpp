@@ -38,6 +38,7 @@ std::vector<std::string> ClassFileManager::GetUnknownClassFiles()
         if (clafil.classname == "unknown") ReturnVec.push_back(clafil.bytecodes);
     }
     if (ReturnVec.size() <= 0) return std::vector<std::string>{"NO CLASSES"};
+    std::cout << "#of Unknown Class Files: " << ReturnVec.size() << std::endl;
     return ReturnVec;
 }
 
@@ -47,4 +48,13 @@ void ClassFileManager::DeleteUnknownClassFiles()
     for (int i = 0; i < ClassFileManager::ClassFilesList.size(); i++) {
         if (ClassFileManager::ClassFilesList[i].classname == "unknown") ClassFileManager::ClassFilesList.erase(ClassFileManager::ClassFilesList.begin() + i);
     }
+}
+
+std::vector<std::string> ClassFileManager::GetClassFileNames()
+{
+    std::vector<std::string> ReturnVec;
+    for (ClassFile clafil : ClassFileManager::ClassFilesList) {
+        ReturnVec.push_back(clafil.classname);
+    }
+    return ReturnVec;
 }

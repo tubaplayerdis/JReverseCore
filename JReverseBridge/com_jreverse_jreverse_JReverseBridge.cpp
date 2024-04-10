@@ -155,10 +155,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
             topass = PipeAPI::noneVec;
             break;
         }
-        logger.Log(check);
         topass.push_back(check);
         //env->ReleaseStringUTFChars(string, check.c_str());
-        logger.Log("Released Args Chars");
     }
 
     logger.Log("Writing args...");

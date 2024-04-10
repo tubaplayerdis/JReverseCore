@@ -12,4 +12,5 @@ public:
 	static void AddClassFile(ClassFile classfile);
 	static std::vector<std::string> GetUnknownClassFiles();
 	static void DeleteUnknownClassFiles();
+	static std::vector<std::string>GetClassFileNames();
 };
