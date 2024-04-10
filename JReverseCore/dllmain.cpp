@@ -535,7 +535,7 @@ void MainThread(HMODULE instance)
             {
                 PipeClientAPI::ReturnPipe.WritePipe(sus);
             }
-            
+
         }
         else if (called == "getClassMethods") {
             std::printf("Getting Class Methods\n");
@@ -561,21 +561,21 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Class File Not Found", "Class File Not Found"});
             }
             else
-            {               
+            {
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {found.classname, found.bytecodes});
-            }        
+            }
         }
         else if (called == "getUnknownClassFiles") {
             PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetUnknownClassFiles());
         }
         else if (called == "setUnknownClassFiles") {
-            std::printf("Deleting Unknown Classes");
+            std::printf("Deleting Unknown Classes\n");
             ClassFileManager::DeleteUnknownClassFiles();
-            std::printf("Setting Unresolved Bytecodes");
-            for (size_t i = 0; i < args.size(); i+=2) {
+            std::printf("Setting Unresolved Bytecodes\n");
+            for (size_t i = 0; i < args.size(); i += 2) {
                 ClassFile sendof;
                 sendof.classname = args[i];
-                sendof.bytecodes = args[i+1];
+                sendof.bytecodes = args[i + 1];
                 std::cout << "Resolved Class: " << sendof.classname << std::endl;
                 ClassFileManager::AddClassFile(sendof);
             }
@@ -583,6 +583,39 @@ void MainThread(HMODULE instance)
         }
         else if (called == "getClassFileNames") {
             PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetClassFileNames());
+        }
+        else if (called == "setupScriptingEnviroment") {
+
+            
+            std::string cppString(args[0]);           
+
+            // Create a jbyteArray
+            jsize len = cppString.length();
+            jbyteArray byteArray = jniEnv->NewByteArray(len);
+            if (byteArray == nullptr) {
+                // Handle memory allocation failure
+                std::cout << "Memory Alloc Faiure!" << std::endl;
+            }
+
+            // Copy content of std::string to jbyteArray
+            jniEnv->SetByteArrayRegion(byteArray, 0, len, reinterpret_cast<const jbyte*>(cppString.c_str()));
+
+            
+            jbyte * bytecodeArray = jniEnv->GetByteArrayElements(byteArray, nullptr);
+
+
+            jclass ScriptingCore = jniEnv->DefineClass("com/jreverse/jreverse/Core/JReverseScriptingCore", NULL, bytecodeArray, len);
+          
+            jniEnv->ReleaseByteArrayElements(byteArray, bytecodeArray, JNI_ABORT);
+
+            if (ScriptingCore == nullptr) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Failed To Make Class"});
+            }
+            else
+            {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Created Scripting Class"});
+            }
+
         }
         else if (called == "uninjectCore") {
             std::cout << "uninjectingJReverse" << std::endl;
