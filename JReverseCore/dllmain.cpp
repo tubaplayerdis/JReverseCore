@@ -161,6 +161,30 @@ bool CheckAndPrintError(jvmtiError error)
 }
 
 
+std::vector<jbyte> readClassFile(const char* filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        // Handle file open error
+        return {};
+    }
+
+    // Get the file size
+    file.seekg(0, std::ios::end);
+    std::streamsize length = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Read the entire file into a vector
+    std::vector<jbyte> buffer(length);
+    if (file.read(reinterpret_cast<char*>(buffer.data()), length)) {
+        return buffer;
+    }
+    else {
+        // Handle read error
+        return {};
+    }
+}
+
+
 void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass class_being_redefined, jobject loader, const char* name, jobject protection_domain, jint class_data_len, const unsigned char* class_data, jint* new_class_data_len, unsigned char** new_class_data) {
         
 
@@ -587,26 +611,15 @@ void MainThread(HMODULE instance)
         else if (called == "setupScriptingEnviroment") {
 
             
-            std::string cppString(args[0]);           
-
-            // Create a jbyteArray
-            jsize len = cppString.length();
-            jbyteArray byteArray = jniEnv->NewByteArray(len);
-            if (byteArray == nullptr) {
-                // Handle memory allocation failure
-                std::cout << "Memory Alloc Faiure!" << std::endl;
-            }
-
-            // Copy content of std::string to jbyteArray
-            jniEnv->SetByteArrayRegion(byteArray, 0, len, reinterpret_cast<const jbyte*>(cppString.c_str()));
-
+            std::vector<jbyte> jvec = readClassFile(args[0].c_str());
             
-            jbyte * bytecodeArray = jniEnv->GetByteArrayElements(byteArray, nullptr);
+            jbyte* classdata = new jbyte[jvec.size()];
 
+            std::copy(jvec.begin(), jvec.end(), classdata);
 
-            jclass ScriptingCore = jniEnv->DefineClass("com/jreverse/jreverse/Core/JReverseScriptingCore", NULL, bytecodeArray, len);
-          
-            jniEnv->ReleaseByteArrayElements(byteArray, bytecodeArray, JNI_ABORT);
+            jclass ScriptingCore = jniEnv->DefineClass("com/jreverse/jreverse/Core/JReverseScriptingCore", NULL, classdata, jvec.size());
+
+            CheckJNIError(jniEnv);
 
             if (ScriptingCore == nullptr) {
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Failed To Make Class"});
