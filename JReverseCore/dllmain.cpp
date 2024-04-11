@@ -199,6 +199,7 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     if (class_data_len <= 0 || class_data == nullptr) {
         // Invalid arguments, log an error and return
         std::cout << "Invalid Class, Abandoning" << std::endl;
+        return;
     }
 
     if (class_being_redefined == nullptr) {
