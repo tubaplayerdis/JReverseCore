@@ -2,12 +2,44 @@
 #include <windows.h>
 #include <TlHelp32.h>
 #include <iostream>
+#include <codecvt> // For std::wstring_convert and std::codecvt_utf8_utf16
+#include <locale> // For std::wstring
 #include <namedpipeapi.h>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include "SharedMemManager.h"
 #include "PipeAPI.h"
 #include "JReverseLogger.h"
+
+
+bool InjectOnStartup(char* dllName, std::wstring apppath)
+{
+    STARTUPINFO startupInfo = { sizeof(startupInfo) };
+    PROCESS_INFORMATION processInfo;
+    CreateProcess(apppath.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo);
+
+    HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, false, processInfo.dwProcessId);
+    if (h)
+    {
+        LPVOID LoadLibAddr = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
+        LPVOID dereercomp = VirtualAllocEx(h, NULL, strlen(dllName), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        WriteProcessMemory(h, dereercomp, dllName, strlen(dllName), NULL);
+        HANDLE asdc = CreateRemoteThread(h, NULL, NULL, (LPTHREAD_START_ROUTINE)LoadLibAddr, dereercomp, 0, NULL);
+        WaitForSingleObject(asdc, INFINITE);
+        VirtualFreeEx(h, dereercomp, strlen(dllName), MEM_RELEASE);
+        CloseHandle(asdc);
+        CloseHandle(h);
+
+        //Resume Process
+        ResumeThread(processInfo.hThread);
+
+        // Close process and thread handles
+        CloseHandle(processInfo.hProcess);
+        CloseHandle(processInfo.hThread);
+        return true;
+    }
+    return false;
+}
 
 
 bool Inject(DWORD pId, char* dllName)
@@ -53,42 +85,6 @@ DWORD GetModuleBaseAddress(DWORD pid, const char* moduleName) {
     return 0;
 }
 
-void CallFunctionOnInjectedDLL(const wchar_t* dllPath, const char* dllName, const char* FunctionToCall, DWORD processPID) {
-    
-    HMODULE hOurModule = LoadLibrary(dllPath);
-    if (!hOurModule) {
-        std::cerr << "Failed to get hOurModule\n";
-        return;
-    }
-
-    FARPROC FunctionAddress = GetProcAddress(hOurModule, FunctionToCall);
-    if (!FunctionAddress) {
-        std::cerr << "Failed to get FunctionAddress\n";
-        return;
-    }
-
-    DWORD offset = (DWORD)((char*)FunctionAddress - (char*)hOurModule);
-
-    DWORD pInjectedFunction = (DWORD)GetModuleBaseAddress(processPID, dllName) + offset;
-    if (!pInjectedFunction) {
-        std::cerr << "Failed to get pInjectedFunction\n";
-        return;
-    }
-
-    HANDLE hInjectedProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processPID);
-    if (!hInjectedProcess) {
-        std::cerr << "Failed to get hInjectedProcess\n";
-        return;
-    }
-
-    HANDLE hInvokingThread = CreateRemoteThread(hInjectedProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pInjectedFunction, NULL, 0, NULL);
-    if (!hInvokingThread) {
-        std::cerr << "Failed to get hInvokingThread\n";
-        return;
-    }
-    
-}
-
 
 JNIEXPORT jboolean JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_testMethod(JNIEnv* env, jclass)
 {
@@ -99,6 +95,17 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InitBrid
 {
     JReverseLogger logger = JReverseLogger(env);
     logger.Log("Initalizing Bridge...");
+}
+
+JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_StartAndInjectDLL(JNIEnv* env, jclass, jstring Location, jstring app)
+{
+    char* location = (char*)env->GetStringUTFChars(Location, 0);
+    std::string apppath = env->GetStringUTFChars(app, 0);
+    bool InjectCode = InjectOnStartup(location, L"dont use");
+    env->ReleaseStringUTFChars(Location, location);
+    env->ReleaseStringUTFChars(app, apppath.c_str());
+    if (InjectCode == false) { return (jint)1; }
+    else { return (jint)0; }
 }
 
 JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InjectDLL(JNIEnv* jniEnv, jclass, jint PID, jstring Location)
