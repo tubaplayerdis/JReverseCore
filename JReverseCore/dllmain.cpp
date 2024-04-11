@@ -656,24 +656,27 @@ void MainThread(HMODULE instance)
             }
             else
             {
-                //jfieldID ScriptEngineOBJID = jniEnv->GetStaticFieldID(ScriptingCore, "engine", "javax/script/ScriptEngine");
-                //jobject tesNull = jniEnv->GetStaticObjectField(ScriptingCore, ScriptEngineOBJID);
-                if (true == false) {
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Scripting Engine not Found!"});
+                
+                std::cout << "Running RunScript Now!" << std::endl;
+                jmethodID RunScriptMethod = jniEnv->GetStaticMethodID(ScriptingCore, "RunScript", "(Ljava/lang/String;)Ljava/lang/String;");
+                jstring ScriptPath = jniEnv->NewStringUTF(args[0].c_str());
+                if (RunScriptMethod != nullptr) {
+                    jstring ScriptRes = (jstring)jniEnv->CallStaticObjectMethod(ScriptingCore, RunScriptMethod, ScriptPath);
+                    std::cout << "Executed Script!" << std::endl;
+
+                    std::string res;
+                    if (ScriptRes == nullptr) res = "Empty Script Return!";
+                    else
+                    {                        
+                        res = jniEnv->GetStringUTFChars(ScriptRes, nullptr);                       
+                    }                                          
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {res});
                 }
                 else
                 {
-                    std::cout << "Running RunScript Now!" << std::endl;
-                    jmethodID RunScriptMethod = jniEnv->GetStaticMethodID(ScriptingCore, "RunScript", "(Ljava/lang/String;)Ljava/lang/String;");
-                    jstring ScriptPath = jniEnv->NewStringUTF(args[0].c_str());
-                    jstring ScriptRes = (jstring)jniEnv->CallStaticObjectMethod(ScriptingCore, RunScriptMethod, ScriptPath);
-
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {jniEnv->GetStringUTFChars(ScriptRes, NULL)});
-
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Script Test"});
-
-                    //jniEnv->ReleaseStringUTFChars(ScriptPath, args[0].c_str());
-                }
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Major Error!"});
+                }                                       
+                
             }
             
         }

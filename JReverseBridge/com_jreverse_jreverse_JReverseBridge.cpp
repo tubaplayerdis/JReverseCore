@@ -143,6 +143,10 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStr
 JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_CallCoreFunction(JNIEnv* env, jclass, jstring name, jobjectArray args)
 {
     JReverseLogger logger = JReverseLogger(env);
+    //Clear Return Pipe
+    logger.Log("Clearing Return Pipe");
+    PipeAPI::ReturnPipe.WritePipe(std::vector<std::string>{"NONE"});
+
     logger.Log("Starting Function Call");
     //Args
     std::vector<std::string> topass;

@@ -13,6 +13,7 @@ JReverseLogger::JReverseLogger(JNIEnv* env)
 
 void JReverseLogger::Log(std::string message)
 {
+	message.append(" - JReverseBridge");
 	Env->CallStaticVoidMethod(LoggerClass, LoggingMethodID, Env->NewStringUTF(message.c_str()));
 }
 
