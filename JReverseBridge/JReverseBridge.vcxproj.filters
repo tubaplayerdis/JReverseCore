@@ -28,9 +28,6 @@
     <Filter Include="Header Files\Python">
       <UniqueIdentifier>{cc4ef0df-32df-4fbe-8d14-c742b8d3b120}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Python">
-      <UniqueIdentifier>{0ab6c5e5-311b-4f0c-a0f1-d3b02e244128}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">

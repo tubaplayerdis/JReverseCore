@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <filesystem>
 #include "PipeManager.h"
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include "PipeClientAPI.h"
@@ -161,27 +162,33 @@ bool CheckAndPrintError(jvmtiError error)
 }
 
 
-std::vector<jbyte> readClassFile(const char* filename) {
-    std::ifstream file(filename, std::ios::binary);
-    if (!file) {
-        // Handle file open error
+std::vector<unsigned char> readClassFile(const char* filename) {
+
+    std::cout << "Check existance of file: " << filename << std::endl;
+
+    if (!std::filesystem::exists(filename)) {
+        std::cout << "File Does Not Exist With Read Class File!" <<std::endl;
         return {};
     }
 
-    // Get the file size
-    file.seekg(0, std::ios::end);
-    std::streamsize length = file.tellg();
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        std::cout << "Handle Open Error With Read Class File!" << std::endl;
+        return {};
+    }
+
+    std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    // Read the entire file into a vector
-    std::vector<jbyte> buffer(length);
-    if (file.read(reinterpret_cast<char*>(buffer.data()), length)) {
-        return buffer;
-    }
-    else {
-        // Handle read error
+    std::vector<unsigned char> buffer(size);
+    if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+        std::cerr << "Error: Unable to read file " << filename << std::endl;
         return {};
     }
+
+    return buffer;
+    
+    
 }
 
 
@@ -609,13 +616,15 @@ void MainThread(HMODULE instance)
             PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetClassFileNames());
         }
         else if (called == "setupScriptingEnviroment") {
-
             
-            std::vector<jbyte> jvec = readClassFile(args[0].c_str());
+            //Load the Scripting Core
+            std::vector<unsigned char> jvec = readClassFile(args[0].c_str());            
             
-            jbyte* classdata = new jbyte[jvec.size()];
+            const jbyte* classdata = reinterpret_cast<const jbyte*>(jvec.data());
 
-            std::copy(jvec.begin(), jvec.end(), classdata);
+            if (jvec.empty()) {
+                std::cout << "File Read Data is Empty!" << std::endl;
+            }
 
             jclass ScriptingCore = jniEnv->DefineClass("com/jreverse/jreverse/Core/JReverseScriptingCore", NULL, classdata, jvec.size());
 
@@ -625,10 +634,48 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Failed To Make Class"});
             }
             else
-            {
-                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Created Scripting Class"});
+            {             
+                //Run Main Method
+                jmethodID mainMethod = jniEnv->GetStaticMethodID(ScriptingCore, "Main", "()I");
+
+                jint result = jniEnv->CallStaticIntMethod(ScriptingCore, mainMethod);
+
+                std::cout << "Result of Main Method: " << result << std::endl;
+
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Created Scripting Class and ran Main with 0"});
             }
 
+
+
+        }
+        else if (called == "runScript")
+        {
+            jclass ScriptingCore = jniEnv->FindClass("com/jreverse/jreverse/Core/JReverseScriptingCore");
+            if (ScriptingCore == nullptr) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Scripting Core Class Not Initalized!"});
+            }
+            else
+            {
+                //jfieldID ScriptEngineOBJID = jniEnv->GetStaticFieldID(ScriptingCore, "engine", "javax/script/ScriptEngine");
+                //jobject tesNull = jniEnv->GetStaticObjectField(ScriptingCore, ScriptEngineOBJID);
+                if (true == false) {
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Scripting Engine not Found!"});
+                }
+                else
+                {
+                    std::cout << "Running RunScript Now!" << std::endl;
+                    jmethodID RunScriptMethod = jniEnv->GetStaticMethodID(ScriptingCore, "RunScript", "(Ljava/lang/String;)Ljava/lang/String;");
+                    jstring ScriptPath = jniEnv->NewStringUTF(args[0].c_str());
+                    jstring ScriptRes = (jstring)jniEnv->CallStaticObjectMethod(ScriptingCore, RunScriptMethod, ScriptPath);
+
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {jniEnv->GetStringUTFChars(ScriptRes, NULL)});
+
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Script Test"});
+
+                    //jniEnv->ReleaseStringUTFChars(ScriptPath, args[0].c_str());
+                }
+            }
+            
         }
         else if (called == "uninjectCore") {
             std::cout << "uninjectingJReverse" << std::endl;
