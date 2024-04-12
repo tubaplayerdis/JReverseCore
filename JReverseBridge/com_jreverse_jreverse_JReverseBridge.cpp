@@ -182,6 +182,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
 
     logger.Log("Wrote function to pipe");
 
+    logger.Log("Starting Wait For Callback");
+    logger.Log("Waiting On Callback");
     int z = 0;
     while (true)
     {
@@ -190,7 +192,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
             break;
         }
         if (!PipeAPI::isReturnPipeNone()) break;
-        logger.Log("Waiting on callback");
+        logger.RemoveAndLog("Waiting On Callback (" + std::to_string(z) + ")");
         Sleep(10);
         z++;
     }

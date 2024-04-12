@@ -31,8 +31,29 @@ void printBool(bool Bool) {
     }
 }
 
-void CheckJNIError(JNIEnv* jniEnv) {
-    if (jniEnv->ExceptionCheck()) { jniEnv->ExceptionDescribe(); jniEnv->ExceptionClear(); }
+const char* CheckJNIError(JNIEnv* jniEnv) {
+    jthrowable ex = nullptr;
+    if (jniEnv->ExceptionCheck()) { std::cout << "A JNI ERROR OCCURED! " << std::endl; ex = jniEnv->ExceptionOccurred(); }
+    if (ex == nullptr) return "No Error";
+    
+    jclass exceptionClass = jniEnv->GetObjectClass(ex);
+
+    // Get the method ID of the getMessage() method of Throwable
+    jmethodID getMessageMethod = jniEnv->GetMethodID(exceptionClass, "getMessage", "()Ljava/lang/String;");
+
+    // Call getMessage() method
+    jstring messageObj = (jstring)jniEnv->CallObjectMethod(ex, getMessageMethod);
+
+    // Convert messageObj to C string
+    const char* message = jniEnv->GetStringUTFChars(messageObj, nullptr);
+    std::cout << "Exception message: " << message << std::endl;
+    
+    // Release the message string
+    jniEnv->ReleaseStringUTFChars(messageObj, message);
+
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+    return message;
 }
 
 static bool JNICALL CustomMethod(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jobject Handle32) {
@@ -629,25 +650,36 @@ void MainThread(HMODULE instance)
 
             jclass ScriptingCore = jniEnv->DefineClass("com/jreverse/jreverse/Core/JReverseScriptingCore", NULL, classdata, jvec.size());
 
-            CheckJNIError(jniEnv);
+            const char* er = CheckJNIError(jniEnv);
 
-            if (ScriptingCore == nullptr) {
-                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Failed To Make Class"});
+            if (er != "No Error") {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", er});
             }
             else
-            {             
-                //Run Main Method
-                jmethodID mainMethod = jniEnv->GetStaticMethodID(ScriptingCore, "Main", "()I");
+            {
+                if (ScriptingCore == nullptr) {
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Failed To Make Class", "Failed To Make Class"});
+                }
+                else
+                {
+                    //Run Main Method
+                    jmethodID mainMethod = jniEnv->GetStaticMethodID(ScriptingCore, "Main", "()I");
 
-                jint result = jniEnv->CallStaticIntMethod(ScriptingCore, mainMethod);
+                    jint result = jniEnv->CallStaticIntMethod(ScriptingCore, mainMethod);
 
-                std::cout << "Result of Main Method: " << result << std::endl;
+                    std::cout << "Result of Main Method: " << result << std::endl;
 
-                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Created Scripting Class and ran Main with 0"});
+                    const char* err = CheckJNIError(jniEnv);
+
+                    if (result == 1) {
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", err});
+                    }
+                    else
+                    {
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Created the scripting enviroment on the Target Sucsessfully!"});
+                    }
+                }
             }
-
-
-
         }
         else if (called == "runScript")
         {
@@ -660,22 +692,29 @@ void MainThread(HMODULE instance)
                 
                 std::cout << "Running RunScript Now!" << std::endl;
                 jmethodID RunScriptMethod = jniEnv->GetStaticMethodID(ScriptingCore, "RunScript", "(Ljava/lang/String;)Ljava/lang/String;");
+                std::cout << "Running Script at Path: " << args[0] << std::endl;
                 jstring ScriptPath = jniEnv->NewStringUTF(args[0].c_str());
                 if (RunScriptMethod != nullptr) {
                     jstring ScriptRes = (jstring)jniEnv->CallStaticObjectMethod(ScriptingCore, RunScriptMethod, ScriptPath);
                     std::cout << "Executed Script!" << std::endl;
-
-                    std::string res;
-                    if (ScriptRes == nullptr) res = "Empty Script Return!";
+                    const char* er = CheckJNIError(jniEnv);
+                    if (er == "No Error") {
+                        std::string res;
+                        if (ScriptRes == nullptr) res = "Empty Script Return!";
+                        else
+                        {
+                            res = jniEnv->GetStringUTFChars(ScriptRes, nullptr);
+                        }
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {res});
+                    }
                     else
-                    {                        
-                        res = jniEnv->GetStringUTFChars(ScriptRes, nullptr);                       
-                    }                                          
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {res});
+                    {
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Error Calling Run Script!"});
+                    }
                 }
                 else
                 {
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Major Error!"});
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Error: The Run Script Method Was Not Found"});
                 }                                       
                 
             }
