@@ -33,7 +33,7 @@ void printBool(bool Bool) {
 
 const char* CheckJNIError(JNIEnv* jniEnv) {
     jthrowable ex = nullptr;
-    if (jniEnv->ExceptionCheck()) { std::cout << "A JNI ERROR OCCURED! " << std::endl; ex = jniEnv->ExceptionOccurred(); }
+    if (jniEnv->ExceptionCheck()) { std::cout << "A JNI ERROR OCCURED! " << std::endl; ex = jniEnv->ExceptionOccurred(); jniEnv->ExceptionDescribe(); }
     if (ex == nullptr) return "No Error";
     
     jclass exceptionClass = jniEnv->GetObjectClass(ex);
@@ -638,10 +638,33 @@ void MainThread(HMODULE instance)
             PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetClassFileNames());
         }
         else if (called == "setupScriptingEnviroment") {
-            
+            //Seutp python
+            std::cout << "Seting up python!" << std::endl;
+
+            if (!std::filesystem::exists(args[1].c_str())) std::cout << "The Jar file does not exist!" << std::endl;
+
+            jclass classLoaderClass = jniEnv->FindClass("java/lang/ClassLoader");
+            jmethodID getSystemClassLoaderMethod = jniEnv->GetStaticMethodID(classLoaderClass, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+            jobject classLoader = jniEnv->CallStaticObjectMethod(classLoaderClass, getSystemClassLoaderMethod);
+
+            jclass URLClassLoaderClass = jniEnv->FindClass("java/net/URLClassLoader");
+            jmethodID addURLMethod = jniEnv->GetMethodID(URLClassLoaderClass, "addURL", "(Ljava/net/URL;)V");
+
+            jmethodID urlConstructor = jniEnv->GetMethodID(classLoaderClass, "<init>", "(Ljava/net/URL;)V");
+            jobject url = jniEnv->NewObject(classLoaderClass, urlConstructor, jniEnv->NewStringUTF(args[1].c_str()));
+            jniEnv->CallVoidMethod(classLoader, addURLMethod, url);
+
+            std::string pythonerror = CheckJNIError(jniEnv);
+
+            jclass pythonInterpreterClass = jniEnv->FindClass("org/python/util/PythonInterpreter");
+            if (pythonInterpreterClass == nullptr) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", "The Python Interter class was not found. Current Error:\n\n\n"+pythonerror});
+            }
+                        
+
             //Load the Scripting Core
-            std::vector<unsigned char> jvec = readClassFile(args[0].c_str());            
-            
+            std::vector<unsigned char> jvec = readClassFile(args[0].c_str());
+
             const jbyte* classdata = reinterpret_cast<const jbyte*>(jvec.data());
 
             if (jvec.empty()) {
@@ -680,6 +703,9 @@ void MainThread(HMODULE instance)
                     }
                 }
             }
+            
+
+            
         }
         else if (called == "addClass") {
             jclass ScriptingCore = jniEnv->FindClass("com/jreverse/jreverse/Core/JReverseScriptingCore");
