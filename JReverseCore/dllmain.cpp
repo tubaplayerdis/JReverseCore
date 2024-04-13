@@ -676,10 +676,38 @@ void MainThread(HMODULE instance)
                     }
                     else
                     {
-                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Created the scripting enviroment on the Target Sucsessfully!"});
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Setup Scripting Enviroment"});
                     }
                 }
             }
+        }
+        else if (called == "addClass") {
+            jclass ScriptingCore = jniEnv->FindClass("com/jreverse/jreverse/Core/JReverseScriptingCore");
+            if (ScriptingCore == nullptr) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Scripting Core Class Not Initalized!"});
+            }
+            else
+            {
+                std::cout << "Adding Loaded Class Now!" << std::endl;
+                jmethodID addMethod = jniEnv->GetStaticMethodID(ScriptingCore, "AddClass", "(Ljava/lang/String;)Ljava/lang/String;");
+                if (addMethod == nullptr) {
+                    std::cout << "You Stupid!" << std::endl;
+                }
+                else
+                {
+                    //Convert std::vector<std::string> to jboject array
+                    jstring arg = jniEnv->NewStringUTF(args[0].c_str());
+
+                    std::cout << "Getting Result of AddClass!" << std::endl;
+                    jstring resultofadd = (jstring)jniEnv->CallStaticObjectMethod(ScriptingCore, addMethod, arg);
+                    std::cout << "Called the Method!" << std::endl;
+                    std::string resultString = jniEnv->GetStringUTFChars(resultofadd, NULL);
+                    std::cout << "Result of AddClasses: " << resultString << std::endl;
+
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{ resultString });
+                }
+            }
+            
         }
         else if (called == "runScript")
         {
