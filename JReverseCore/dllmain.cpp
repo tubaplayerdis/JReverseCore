@@ -33,7 +33,7 @@ void printBool(bool Bool) {
 
 const char* CheckJNIError(JNIEnv* jniEnv) {
     jthrowable ex = nullptr;
-    if (jniEnv->ExceptionCheck()) { std::cout << "A JNI ERROR OCCURED! " << std::endl; ex = jniEnv->ExceptionOccurred(); jniEnv->ExceptionDescribe(); }
+    if (jniEnv->ExceptionCheck()) { std::cout << "A JVM EXEPTION WAS FOUND!" << std::endl; ex = jniEnv->ExceptionOccurred(); }
     if (ex == nullptr) return "No Error";
     
     jclass exceptionClass = jniEnv->GetObjectClass(ex);
@@ -47,7 +47,35 @@ const char* CheckJNIError(JNIEnv* jniEnv) {
     // Convert messageObj to C string
     const char* message = jniEnv->GetStringUTFChars(messageObj, nullptr);
     std::cout << "Exception message: " << message << std::endl;
-    
+
+    // Create a StringWriter to capture the stack trace
+    jclass stringWriterClass = jniEnv->FindClass("java/io/StringWriter");
+    jmethodID stringWriterConstructor = jniEnv->GetMethodID(stringWriterClass, "<init>", "()V");
+    jobject stringWriterObject = jniEnv->NewObject(stringWriterClass, stringWriterConstructor);
+    jmethodID stringWriterMethod = jniEnv->GetMethodID(stringWriterClass, "toString", "()Ljava/lang/String;");
+
+    // Create a PrintWriter to write to the StringWriter
+    jclass printWriterClass = jniEnv->FindClass("java/io/PrintWriter");
+    jmethodID printWriterConstructor = jniEnv->GetMethodID(printWriterClass, "<init>", "(Ljava/io/Writer;)V");
+    jobject printWriterObject = jniEnv->NewObject(printWriterClass, printWriterConstructor, stringWriterObject);
+
+    // Print the stack trace to the PrintWriter
+    jclass throwableClass = jniEnv->FindClass("java/lang/Throwable");
+    jmethodID printStackTraceMethod = jniEnv->GetMethodID(throwableClass, "printStackTrace", "(Ljava/io/PrintWriter;)V");
+    jniEnv->CallVoidMethod(ex, printStackTraceMethod, printWriterObject);
+
+    // Get the string representation from the StringWriter
+    jstring stackTraceString = (jstring)jniEnv->CallObjectMethod(stringWriterObject, stringWriterMethod);
+
+    // Convert the Java string to C-style string
+    const char* stackTraceCString = jniEnv->GetStringUTFChars(stackTraceString, NULL);
+
+    // Print the stack trace string to std::cout
+    std::cout << "Exception stack trace:\n" << stackTraceCString << std::endl;
+
+    // Release the allocated memory
+    jniEnv->ReleaseStringUTFChars(stackTraceString, stackTraceCString);
+
     // Release the message string
     jniEnv->ReleaseStringUTFChars(messageObj, message);
 
@@ -486,6 +514,7 @@ void add_path(JNIEnv* env, const std::string& path)
 void MainThread(HMODULE instance)
 {
     std::printf("JReverse Has Been Injected Successfully!\n");
+    std::cerr << "Testing STD:ERR stream" << std::endl;
     using jniGetCreatedJavaVMs_t = jint(*)(JavaVM** vmBuf, jsize bufLen, jsize* nVMs);
 
     
@@ -661,6 +690,10 @@ void MainThread(HMODULE instance)
             //This works. Thanks Stack Overflow!
             add_path(jniEnv,args[1]);
 
+            std::cout << "Checking Errors" << std::endl;
+            CheckJNIError(jniEnv);
+
+
             jclass pythonInterpreterClass = jniEnv->FindClass("org/python/util/PythonInterpreter");
             if (pythonInterpreterClass == nullptr) {
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", "The Python Interter class was not found. Aborting Setup..."});
@@ -705,6 +738,12 @@ void MainThread(HMODULE instance)
                         {
                             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Setup Python and JReverse Scripting System on target process!"});
                         }
+
+                        std::cout << "Checking for Interpreter class" << std::endl;
+                        jclass ScriptingCore = jniEnv->FindClass("org/python/util/PythonInterpreter");
+                        if (ScriptingCore == nullptr) {
+                            std::cout << "Failed to find Python Interperter Class!" << std::endl;
+                        }
                     }
                 }
             }
@@ -715,7 +754,8 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Scripting Core Class Not Initalized!"});
             }
             else
-            {
+            {                
+
                 std::cout << "Adding Loaded Class Now!" << std::endl;
                 jmethodID addMethod = jniEnv->GetStaticMethodID(ScriptingCore, "AddClass", "(Ljava/lang/String;)Ljava/lang/String;");
                 if (addMethod == nullptr) {
@@ -745,29 +785,13 @@ void MainThread(HMODULE instance)
             }
             else
             {
-                
-                std::cout << "Running RunScript Now!" << std::endl;
-                jmethodID RunScriptMethod = jniEnv->GetStaticMethodID(ScriptingCore, "RunScript", "(Ljava/lang/String;)Ljava/lang/String;");
-                std::cout << "Running Script at Path: " << args[0] << std::endl;
-                jstring ScriptPath = jniEnv->NewStringUTF(args[0].c_str());
-                if (RunScriptMethod != nullptr) {
-                    jstring ScriptRes = (jstring)jniEnv->CallStaticObjectMethod(ScriptingCore, RunScriptMethod, ScriptPath);
-                    std::cout << "Executed Script!" << std::endl;
-                    std::string er = CheckJNIError(jniEnv);
-                    
-                    std::string res;
-                    if (ScriptRes == nullptr) res = "Empty Script Return!";
-                    else
-                    {
-                        res = jniEnv->GetStringUTFChars(ScriptRes, nullptr);
-                    }
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {res+"   \n\n"+er});
-                                     
+               
+                std::cout << "Checking for Interpreter class" << std::endl;
+                jclass ScriptingCore = jniEnv->FindClass("org/python/util/PythonInterpreter");
+                if (ScriptingCore == nullptr) {
+                    std::cout << "Failed to find Python Interperter Class!" << std::endl;
                 }
-                else
-                {
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Error: The Run Script Method Was Not Found"});
-                }                                       
+                //impl running script logic via JNI
                 
             }
             
@@ -793,6 +817,7 @@ bool __stdcall DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
     {
         AllocConsole();
         freopen_s(&p_file, "CONOUT$", "w", stdout);
+        freopen_s(&p_file, "CONOUT$", "w", stderr);
 
         CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MainThread, hinstance, 0, nullptr);
     }
