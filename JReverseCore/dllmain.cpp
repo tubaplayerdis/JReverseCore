@@ -467,6 +467,21 @@ std::vector<std::string> getMethodBytecodes(jvmtiEnv* TIenv, JNIEnv* jniEnv, std
     return std::vector<std::string> {bytecodeString.str()};
 }
 
+void add_path(JNIEnv* env, const std::string& path)
+{
+    const std::string urlPath = "file:/"+path;
+    jclass classLoaderCls = env->FindClass("java/lang/ClassLoader");
+    jmethodID getSystemClassLoaderMethod = env->GetStaticMethodID(classLoaderCls, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+    jobject classLoaderInstance = env->CallStaticObjectMethod(classLoaderCls, getSystemClassLoaderMethod);
+    jclass urlClassLoaderCls = env->FindClass("java/net/URLClassLoader");
+    jmethodID addUrlMethod = env->GetMethodID(urlClassLoaderCls, "addURL", "(Ljava/net/URL;)V");
+    jclass urlCls = env->FindClass("java/net/URL");
+    jmethodID urlConstructor = env->GetMethodID(urlCls, "<init>", "(Ljava/lang/String;)V");
+    jobject urlInstance = env->NewObject(urlCls, urlConstructor, env->NewStringUTF(urlPath.c_str()));
+    env->CallVoidMethod(classLoaderInstance, addUrlMethod, urlInstance);
+    std::cout << "Added " << urlPath << " to the classpath." << std::endl;
+}
+
 
 void MainThread(HMODULE instance)
 {
@@ -643,69 +658,56 @@ void MainThread(HMODULE instance)
 
             if (!std::filesystem::exists(args[1].c_str())) std::cout << "The Jar file does not exist!" << std::endl;
 
-            jclass classLoaderClass = jniEnv->FindClass("java/lang/ClassLoader");
-            jmethodID getSystemClassLoaderMethod = jniEnv->GetStaticMethodID(classLoaderClass, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
-            jobject classLoader = jniEnv->CallStaticObjectMethod(classLoaderClass, getSystemClassLoaderMethod);
-
-            jclass URLClassLoaderClass = jniEnv->FindClass("java/net/URLClassLoader");
-            jmethodID addURLMethod = jniEnv->GetMethodID(URLClassLoaderClass, "addURL", "(Ljava/net/URL;)V");
-
-            jmethodID urlConstructor = jniEnv->GetMethodID(classLoaderClass, "<init>", "(Ljava/net/URL;)V");
-            jobject url = jniEnv->NewObject(classLoaderClass, urlConstructor, jniEnv->NewStringUTF(args[1].c_str()));
-            jniEnv->CallVoidMethod(classLoader, addURLMethod, url);
-
-            std::string pythonerror = CheckJNIError(jniEnv);
+            //This works. Thanks Stack Overflow!
+            add_path(jniEnv,args[1]);
 
             jclass pythonInterpreterClass = jniEnv->FindClass("org/python/util/PythonInterpreter");
             if (pythonInterpreterClass == nullptr) {
-                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", "The Python Interter class was not found. Current Error:\n\n\n"+pythonerror});
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", "The Python Interter class was not found. Aborting Setup..."});
             }
-                        
+            else {
+                //Load the Scripting Core
+                std::vector<unsigned char> jvec = readClassFile(args[0].c_str());
 
-            //Load the Scripting Core
-            std::vector<unsigned char> jvec = readClassFile(args[0].c_str());
+                const jbyte* classdata = reinterpret_cast<const jbyte*>(jvec.data());
 
-            const jbyte* classdata = reinterpret_cast<const jbyte*>(jvec.data());
+                if (jvec.empty()) {
+                    std::cout << "File Read Data is Empty!" << std::endl;
+                }
 
-            if (jvec.empty()) {
-                std::cout << "File Read Data is Empty!" << std::endl;
-            }
+                jclass ScriptingCore = jniEnv->DefineClass("com/jreverse/jreverse/Core/JReverseScriptingCore", NULL, classdata, jvec.size());
 
-            jclass ScriptingCore = jniEnv->DefineClass("com/jreverse/jreverse/Core/JReverseScriptingCore", NULL, classdata, jvec.size());
+                const char* er = CheckJNIError(jniEnv);
 
-            const char* er = CheckJNIError(jniEnv);
-
-            if (er != "No Error") {
-                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", er});
-            }
-            else
-            {
-                if (ScriptingCore == nullptr) {
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Failed To Make Class", "Failed To Make Class"});
+                if (er != "No Error") {
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", er});
                 }
                 else
                 {
-                    //Run Main Method
-                    jmethodID mainMethod = jniEnv->GetStaticMethodID(ScriptingCore, "Main", "()I");
-
-                    jint result = jniEnv->CallStaticIntMethod(ScriptingCore, mainMethod);
-
-                    std::cout << "Result of Main Method: " << result << std::endl;
-
-                    const char* err = CheckJNIError(jniEnv);
-
-                    if (result == 1) {
-                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", err});
+                    if (ScriptingCore == nullptr) {
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Failed To Make Class", "Failed To Make Class"});
                     }
                     else
                     {
-                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Setup Scripting Enviroment"});
+                        //Run Main Method
+                        jmethodID mainMethod = jniEnv->GetStaticMethodID(ScriptingCore, "Main", "()I");
+
+                        jint result = jniEnv->CallStaticIntMethod(ScriptingCore, mainMethod);
+
+                        std::cout << "Result of Main Method: " << result << std::endl;
+
+                        const char* err = CheckJNIError(jniEnv);
+
+                        if (result == 1) {
+                            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", err});
+                        }
+                        else
+                        {
+                            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Setup Python and JReverse Scripting System on target process!"});
+                        }
                     }
                 }
             }
-            
-
-            
         }
         else if (called == "addClass") {
             jclass ScriptingCore = jniEnv->FindClass("com/jreverse/jreverse/Core/JReverseScriptingCore");
@@ -751,20 +753,16 @@ void MainThread(HMODULE instance)
                 if (RunScriptMethod != nullptr) {
                     jstring ScriptRes = (jstring)jniEnv->CallStaticObjectMethod(ScriptingCore, RunScriptMethod, ScriptPath);
                     std::cout << "Executed Script!" << std::endl;
-                    const char* er = CheckJNIError(jniEnv);
-                    if (er == "No Error") {
-                        std::string res;
-                        if (ScriptRes == nullptr) res = "Empty Script Return!";
-                        else
-                        {
-                            res = jniEnv->GetStringUTFChars(ScriptRes, nullptr);
-                        }
-                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {res});
-                    }
+                    std::string er = CheckJNIError(jniEnv);
+                    
+                    std::string res;
+                    if (ScriptRes == nullptr) res = "Empty Script Return!";
                     else
                     {
-                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Error Calling Run Script!"});
+                        res = jniEnv->GetStringUTFChars(ScriptRes, nullptr);
                     }
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {res+"   \n\n"+er});
+                                     
                 }
                 else
                 {
