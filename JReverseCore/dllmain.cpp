@@ -740,8 +740,8 @@ void MainThread(HMODULE instance)
                         }
 
                         std::cout << "Checking for Interpreter class" << std::endl;
-                        jclass ScriptingCore = jniEnv->FindClass("org/python/util/PythonInterpreter");
-                        if (ScriptingCore == nullptr) {
+                        jclass PYInterpreterClass = jniEnv->FindClass("org/python/util/PythonInterpreter");
+                        if (PYInterpreterClass == nullptr) {
                             std::cout << "Failed to find Python Interperter Class!" << std::endl;
                         }
                     }
@@ -787,11 +787,79 @@ void MainThread(HMODULE instance)
             {
                
                 std::cout << "Checking for Interpreter class" << std::endl;
-                jclass ScriptingCore = jniEnv->FindClass("org/python/util/PythonInterpreter");
-                if (ScriptingCore == nullptr) {
+                jclass PythonInterpreterCalss = jniEnv->FindClass("org/python/util/PythonInterpreter");
+                if (PythonInterpreterCalss == nullptr) {
                     std::cout << "Failed to find Python Interperter Class!" << std::endl;
                 }
-                //impl running script logic via JNI
+                else
+                {
+                    std::cout << "Running Script Process" << std::endl;
+                    //Get constructor and create the Interpreter Object.
+                    jmethodID PYconstructor = jniEnv->GetMethodID(PythonInterpreterCalss, "<init>", "()V");
+                    jobject PYInterpreterOBJ = jniEnv->NewObject(PythonInterpreterCalss, PYconstructor);
+
+                    std::cout << "Constructed The Python Interpreter" << std::endl;
+
+                    //Get and Create StringWriter
+                    jclass stringWriterClass = jniEnv->FindClass("java/io/StringWriter");
+                    jmethodID StringWriterconstructor = jniEnv->GetMethodID(stringWriterClass, "<init>", "()V");
+                    jmethodID toStringMethod = jniEnv->GetMethodID(stringWriterClass, "toString", "()Ljava/lang/String;");
+                    jmethodID closeWriterMethod = jniEnv->GetMethodID(stringWriterClass, "close", "()V");
+                    jmethodID flushWriterMethod = jniEnv->GetMethodID(stringWriterClass, "flush", "()V");
+                    jobject stringWriterObj = jniEnv->NewObject(stringWriterClass, StringWriterconstructor);
+
+                    std::cout << "Created String Writer" << std::endl;
+
+                    //Link the String Writer to the PYInterpreter
+                    jmethodID PYInterpreterSetOut = jniEnv->GetMethodID(PythonInterpreterCalss, "setOut", "(Ljava/io/Writer;)V");
+                    jmethodID PYInterpreterSetErr = jniEnv->GetMethodID(PythonInterpreterCalss, "setErr", "(Ljava/io/Writer;)V");
+                    jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetOut, stringWriterObj);
+                    jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetErr, stringWriterObj);
+
+                    std::cout << "Linked String Writer" << std::endl;
+
+                    std::cout << "Changing Jython Modifier Respectfullness" << std::endl;
+                    jclass JythonRegistry = jniEnv->FindClass("org/python/core/RegistryKey");
+                    if (JythonRegistry != nullptr) {
+                        jfieldID RespectModifiers = jniEnv->GetStaticFieldID(JythonRegistry, "PYTHON_SECURITY_RESPECT_JAVA_ACCESSIBILITY", "Ljava/lang/String;");
+                        if (RespectModifiers != nullptr) {
+                            jstring jflasestring = jniEnv->NewStringUTF("false");
+                            jniEnv->SetStaticObjectField(JythonRegistry, RespectModifiers, jflasestring);
+                        }
+                        else std::cout << "Registry Class Field was not found" << std::endl;
+                    }
+                    else std::cout << "Registry Class was not found" << std::endl;
+                    
+
+                    //Call ExecFile
+                    jmethodID PYInterpreterExecFile = jniEnv->GetMethodID(PythonInterpreterCalss, "execfile", "(Ljava/lang/String;)V");
+                    if (PYInterpreterExecFile == nullptr) {
+                        std::cout << "execfile signature incorrect!" << std::endl;
+                    }
+                    jstring ArgsString = jniEnv->NewStringUTF(args[0].c_str());
+                    jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterExecFile, ArgsString);
+
+                    std::cout << "Executed execfile" << std::endl;
+
+                    //Flush Stream to get output
+                    jniEnv->CallVoidMethod(stringWriterObj, flushWriterMethod);
+
+                    //Capture Output 
+                    jstring RawOutput = (jstring)jniEnv->CallObjectMethod(stringWriterObj, toStringMethod);
+                    std::string Output = jniEnv->GetStringUTFChars(RawOutput, NULL);
+                    if (Output.empty()) {
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Script Return Empty!"});
+                    }
+                    else
+                    {
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {Output});
+                    }
+
+                    
+
+                    std::cout << "Returned Values" << std::endl;
+                }
+                
                 
             }
             
