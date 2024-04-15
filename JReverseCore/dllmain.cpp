@@ -819,12 +819,12 @@ void MainThread(HMODULE instance)
                     std::cout << "Linked String Writer" << std::endl;
 
                     std::cout << "Changing Jython Modifier Respectfullness" << std::endl;
-                    jclass JythonRegistry = jniEnv->FindClass("org/python/core/RegistryKey");
+                    jclass JythonOptions = jniEnv->FindClass("org/python/core/Options");
                     if (JythonRegistry != nullptr) {
-                        jfieldID RespectModifiers = jniEnv->GetStaticFieldID(JythonRegistry, "PYTHON_SECURITY_RESPECT_JAVA_ACCESSIBILITY", "Ljava/lang/String;");
+                        jfieldID RespectModifiers = jniEnv->GetStaticFieldID(JythonOptions, "respectJavaAccessibility", "Z");
                         if (RespectModifiers != nullptr) {
-                            jstring jflasestring = jniEnv->NewStringUTF("false");
-                            jniEnv->SetStaticObjectField(JythonRegistry, RespectModifiers, jflasestring);
+                            jboolean flasebool = (jboolean)false
+                            jniEnv->SetStaticObjectField(JythonOptions, RespectModifiers, flasebool);
                         }
                         else std::cout << "Registry Class Field was not found" << std::endl;
                     }
