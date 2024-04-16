@@ -18,6 +18,7 @@
 #include "PipeClientAPI.h"
 #include "ClassFile.h"
 #include "ClassFileManager.h"
+#include "datastore.h"
 
 
 
@@ -598,7 +599,11 @@ void MainThread(HMODULE instance)
         return;
     }
 
+
+
     std::printf("Enabeld Class file load hooks\n");
+
+    JReverseStore::jvmtienv = TIenv;
 
 
     std::printf("Successfully connected to the Java VM\n");
@@ -819,12 +824,12 @@ void MainThread(HMODULE instance)
                     std::cout << "Linked String Writer" << std::endl;
 
                     std::cout << "Changing Jython Modifier Respectfullness" << std::endl;
-                    jclass JythonRegistry = jniEnv->FindClass("org/python/core/RegistryKey");
-                    if (JythonRegistry != nullptr) {
-                        jfieldID RespectModifiers = jniEnv->GetStaticFieldID(JythonRegistry, "PYTHON_SECURITY_RESPECT_JAVA_ACCESSIBILITY", "Ljava/lang/String;");
+                    jclass JythonOptions = jniEnv->FindClass("org/python/core/Options");
+                    if (JythonOptions != nullptr) {
+                        jfieldID RespectModifiers = jniEnv->GetStaticFieldID(JythonOptions, "respectJavaAccessibility", "Z");
                         if (RespectModifiers != nullptr) {
-                            jstring jflasestring = jniEnv->NewStringUTF("false");
-                            jniEnv->SetStaticObjectField(JythonRegistry, RespectModifiers, jflasestring);
+                            jboolean flasebool = (jboolean)false;
+                            jniEnv->SetStaticBooleanField(JythonOptions, RespectModifiers, flasebool);
                         }
                         else std::cout << "Registry Class Field was not found" << std::endl;
                     }

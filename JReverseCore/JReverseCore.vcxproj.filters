@@ -25,6 +25,12 @@
     <Filter Include="Source Files\ClassFileData">
       <UniqueIdentifier>{1bfa5670-4b4e-4819-ae90-f8332ea3cf47}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\jni">
+      <UniqueIdentifier>{9f9f3b19-e3e9-4f9c-8c41-8ab6c925e771}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\jni">
+      <UniqueIdentifier>{f7fd1609-e647-47cd-851c-a05d7ff28dc4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -54,6 +60,12 @@
     <ClInclude Include="ClassFileManager.h">
       <Filter>Header Files\ClassFileData</Filter>
     </ClInclude>
+    <ClInclude Include="com_jreverse_jreverse_Core_JReverseScriptingCore.h">
+      <Filter>Header Files\jni</Filter>
+    </ClInclude>
+    <ClInclude Include="datastore.h">
+      <Filter>Header Files\jni</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -76,6 +88,9 @@
     </ClCompile>
     <ClCompile Include="ClassFileManager.cpp">
       <Filter>Source Files\ClassFileData</Filter>
+    </ClCompile>
+    <ClCompile Include="com_jreverse_jreverse_Core_JReverseScriptingCore.cpp">
+      <Filter>Source Files\jni</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

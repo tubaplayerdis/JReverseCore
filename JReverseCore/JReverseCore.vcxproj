@@ -148,6 +148,8 @@
   <ItemGroup>
     <ClInclude Include="ClassFile.h" />
     <ClInclude Include="ClassFileManager.h" />
+    <ClInclude Include="com_jreverse_jreverse_Core_JReverseScriptingCore.h" />
+    <ClInclude Include="datastore.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="JReversePipeClient.h" />
     <ClInclude Include="JReversePipeHelper.h" />
@@ -159,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="..\JReverseBridge\JReversePipeHelper.cpp" />
     <ClCompile Include="ClassFileManager.cpp" />
+    <ClCompile Include="com_jreverse_jreverse_Core_JReverseScriptingCore.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="JReversePipeHelper.cpp" />
     <ClCompile Include="pch.cpp">
