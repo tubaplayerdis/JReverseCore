@@ -1,12 +1,12 @@
 NOTE: If the Bridge DLL is Updated, it has to be copied to the jreverse folder(more like replaces) for updates to work becuase it uses that dll: C:\Users\aaron\IdeaProjects\jreverse
 
 IDEAS:
-Add abolity to load class files into the peogram via the UI. also have special API/Package to accses instanced/already running classes+methods/fields
-(DO THIS FIRST)Also implement javascript as a beginner version of the scripter, allowing functions to be called with intergal types and responses. maybe can use for more powerful applications. (DO THIS FIRST)
+Add ability to load class files and jar files into the injected jvm via the UI. This is already implemented just need to link it with the UI
+add method to jython embed to allow the return of instanced java classes
 Scripting Documentation can be in plain html
 
 TODO:
 
-Get Bytecode of functions and send them off. 
+impl ideas #1 and #2. 
 
-Impl Dynamic Reallocaation of JReversePipe's
+Impl Dynamic Reallocation of JReversePipe's
