@@ -19,6 +19,7 @@
 #include "ClassFile.h"
 #include "ClassFileManager.h"
 #include "datastore.h"
+#include "com_jreverse_jreverse_Core_JReverseScriptingCore.h"
 
 
 
@@ -312,8 +313,6 @@ std::vector<std::string> getClassInstances(jvmtiEnv* TIenv, JNIEnv* jniEnv, std:
     std::printf(std::to_string((int)count).c_str());
     std::printf("\n");
 
-    TIenv->Deallocate((unsigned char*)objs);
-
     if (count == 0) return std::vector<std::string> {"NO INSTANCES"};
 
     GlobalVector.push_back(std::to_string(count));
@@ -561,7 +560,6 @@ void MainThread(HMODULE instance)
         return;
     }
 
-
     static jvmtiCapabilities capa;
     (void)memset(&capa, 0, sizeof(jvmtiCapabilities));
     capa.can_tag_objects = 1;
@@ -717,6 +715,26 @@ void MainThread(HMODULE instance)
 
                 const char* er = CheckJNIError(jniEnv);
 
+                if (ScriptingCore == nullptr) std::cout << "Scripting Core was NULL" << std::endl;
+
+                std::cout << "Starting Native Registration!" << std::endl;
+
+                //Register Native Methods
+                // Define your JNI methods here
+                char MethodName[18] = "GetClassInstances";
+                char MethodSig[40] = "(Ljava/lang/String;)[Ljava/lang/Object;";
+                JNINativeMethod methods[] = {
+                    { MethodName, MethodSig, (void*)&Java_com_jreverse_jreverse_Core_JReverseScriptingCore_GetClassInstances }
+                };                
+
+                // Register the native methods with the class
+
+                if (jniEnv->RegisterNatives(ScriptingCore, methods, 1) != 0) {
+                    std::cout << "Register Error!" << std::endl;
+                }
+
+                std::cout << "Registered Method!" << std::endl;
+
                 if (er != "No Error") {
                     PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", er});
                 }
@@ -798,6 +816,29 @@ void MainThread(HMODULE instance)
                 }
                 else
                 {
+                    std::cout << "Testing Object Instacne Stuff!" << std::endl;
+                    jmethodID GetClassInstacnesMethod = jniEnv->GetStaticMethodID(ScriptingCore, "GetClassInstances", "(Ljava/lang/String;)[Ljava/lang/Object;");
+                    if (GetClassInstacnesMethod != nullptr) {
+                        jstring yup = jniEnv->NewStringUTF("com/ti/et/sda/app/ActivationController");
+                        std::printf("Calling StaticObjectMethod!\n");
+                        jobjectArray Result = (jobjectArray)jniEnv->CallStaticObjectMethod(ScriptingCore, GetClassInstacnesMethod, yup);
+                        if (Result == nullptr) {
+                            std::printf("Problem!\n");
+                        }
+                        else
+                        {
+                            jsize cool = jniEnv->GetArrayLength(Result);
+                            std::cout << "Retuned OBJ Size!" << (int)cool << std::endl;
+                        }
+                    }
+                    else std::cout << "Method Does Not Exist!" << std::endl;
+                    
+                    std::cout << "Manual Check!\n";
+                    jclass gab = jniEnv->FindClass("com/ti/et/sda/app/ActivationController");
+                    if (gab == nullptr) std::cout << "Could not find class manually!\n";
+                    
+
+
                     std::cout << "Running Script Process" << std::endl;
                     //Get constructor and create the Interpreter Object.
                     jmethodID PYconstructor = jniEnv->GetMethodID(PythonInterpreterCalss, "<init>", "()V");
