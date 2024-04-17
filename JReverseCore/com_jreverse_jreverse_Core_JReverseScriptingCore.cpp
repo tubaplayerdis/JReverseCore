@@ -2,7 +2,6 @@
 #include "jvmti.h"
 #include "jni.h"
 #include "jvmticmlr.h"
-#include "datastore.h"
 #include <string>
 #include <windows.h>
 #include <iostream>
@@ -18,23 +17,13 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
 {
     std::printf("Getting TIEnv Pointer!\n");
 
-    using jniGetCreatedJavaVMs_t = jint(*)(JavaVM** vmBuf, jsize bufLen, jsize* nVMs);
-
-    const auto jvmHandle = GetModuleHandleW(L"jvm.dll");
-    if (jvmHandle == nullptr)
-    {
-        std::printf("[!] Failed to retrieve handle for \"jvm.dll\"!\n");
-    }
-
-    const auto jniGetCreatedJavaVMs = reinterpret_cast<jniGetCreatedJavaVMs_t>(GetProcAddress(
-        jvmHandle, "JNI_GetCreatedJavaVMs"));
-
     JavaVM* javaVm = nullptr;
-    jniGetCreatedJavaVMs(&javaVm, 1, nullptr);
-    if (javaVm == nullptr)
-    {
-        std::printf("[!] Failed to retrieve created Java VMs!\n");
-    }
+    jint atres = jniEnv->GetJavaVM(&javaVm);
+    std::cout << atres << std::endl;
+
+    if (javaVm == nullptr) std::printf("Extremley Large Problem!");
+
+    javaVm->AttachCurrentThread(reinterpret_cast<void**>(&jniEnv), nullptr);
     
     jvmtiEnv* TIenv = nullptr;
     jint res = javaVm->GetEnv((void**)&TIenv, JVMTI_VERSION_1);
@@ -43,27 +32,26 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
         std::printf("[!] Failed to retrive JVMTI interface on the Java VM.\n");
     }
 
-    std::printf("Got TIenv Pointer\n");
+    if (jniEnv->ExceptionCheck() == true) std::printf("JNI ERROR!");
 
-    JNIEnv* env = nullptr;
+    
 
-    javaVm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
-    if (env == nullptr)
-    {
-        std::printf("[!] Failed to attach to the Java VM.\n");
-    }
 
-    std::string clazz = env->GetStringUTFChars(ClassName, NULL);
+    std::printf("Got TIenv and envPointer\n");
+
+    if (jniEnv == nullptr) std::printf("Major Problem!");
+
+    std::string clazz = jniEnv->GetStringUTFChars(ClassName, NULL);
 
     std::cout << "Checking Existance of: " << clazz.c_str() << std::endl;
 
-    jclass cladd = env->FindClass(clazz.c_str()); //Does not find some loaded classes for some reason.
-    jclass stringclass = env->FindClass("java/lang/String");
+    jclass cladd = jniEnv->FindClass(clazz.c_str()); //Does not find some loaded classes for some reason.
+    jclass stringclass = jniEnv->FindClass("java/lang/String");
     if (cladd == nullptr) {
         std::printf("Class Does Not Exist!\n");
-        jstring badstring = env->NewStringUTF("Class Not Found!");
-        jobjectArray badresult = env->NewObjectArray(1, stringclass, NULL);
-        env->SetObjectArrayElement(badresult, 0, badstring);
+        jstring badstring = jniEnv->NewStringUTF("Class Not Found!");
+        jobjectArray badresult = jniEnv->NewObjectArray(1, stringclass, NULL);
+        jniEnv->SetObjectArrayElement(badresult, 0, badstring);
         std::printf("Sending off String Array!\n");
         return badresult;
     }
@@ -87,11 +75,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
 
     std::printf("Got Class Instacnes!\n");
 
-    jobjectArray result = env->NewObjectArray(count, cladd, NULL);
+    jobjectArray result = jniEnv->NewObjectArray(count, cladd, NULL);
 
     for (int i = 0; i < count; i++) {
         jobject cur = objs[i];
-        env->SetObjectArrayElement(result, i, cur);
+        jniEnv->SetObjectArrayElement(result, i, cur);
     }
 
     return result;
