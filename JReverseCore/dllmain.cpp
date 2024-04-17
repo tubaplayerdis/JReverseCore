@@ -13,6 +13,7 @@
 #include <sstream>
 #include <iomanip>
 #include <filesystem>
+#include <chrono>
 #include "PipeManager.h"
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include "PipeClientAPI.h"
@@ -612,6 +613,16 @@ void MainThread(HMODULE instance)
 
     std::printf("Starting Function Call Loop\n");
 
+    //Create Scripting StringWriter!
+    jclass stringWriterClass = jniEnv->FindClass("java/io/StringWriter");
+    jmethodID StringWriterconstructor = jniEnv->GetMethodID(stringWriterClass, "<init>", "()V");
+    jmethodID toStringMethod = jniEnv->GetMethodID(stringWriterClass, "toString", "()Ljava/lang/String;");
+    jmethodID closeWriterMethod = jniEnv->GetMethodID(stringWriterClass, "close", "()V");
+    jmethodID flushWriterMethod = jniEnv->GetMethodID(stringWriterClass, "flush", "()V");
+    jmethodID writeWriterMethod = jniEnv->GetMethodID(stringWriterClass, "write", "(Ljava/lang/String;)V");
+    jobject stringWriterObj = jniEnv->NewObject(stringWriterClass, StringWriterconstructor);
+
+
     while (true) {
         while (true) {            
             if (!PipeClientAPI::isFunctionPipeNone()) {
@@ -816,45 +827,13 @@ void MainThread(HMODULE instance)
                 }
                 else
                 {
-                    std::cout << "Testing Object Instacne Stuff!" << std::endl;
-                    jmethodID GetClassInstacnesMethod = jniEnv->GetStaticMethodID(ScriptingCore, "GetClassInstances", "(Ljava/lang/String;)[Ljava/lang/Object;");
-                    if (GetClassInstacnesMethod != nullptr) {
-                        jstring yup = jniEnv->NewStringUTF("com/ti/et/sda/app/ActivationController");
-                        std::printf("Calling StaticObjectMethod!\n");
-                        jobjectArray Result = (jobjectArray)jniEnv->CallStaticObjectMethod(ScriptingCore, GetClassInstacnesMethod, yup);
-                        if (Result == nullptr) {
-                            std::printf("Problem!\n");
-                        }
-                        else
-                        {
-                            jsize cool = jniEnv->GetArrayLength(Result);
-                            std::cout << "Retuned OBJ Size!" << (int)cool << std::endl;
-                        }
-                    }
-                    else std::cout << "Method Does Not Exist!" << std::endl;
                     
-                    std::cout << "Manual Check!\n";
-                    jclass gab = jniEnv->FindClass("com/ti/et/sda/app/ActivationController");
-                    if (gab == nullptr) std::cout << "Could not find class manually!\n";
-                    
-
-
                     std::cout << "Running Script Process" << std::endl;
                     //Get constructor and create the Interpreter Object.
                     jmethodID PYconstructor = jniEnv->GetMethodID(PythonInterpreterCalss, "<init>", "()V");
                     jobject PYInterpreterOBJ = jniEnv->NewObject(PythonInterpreterCalss, PYconstructor);
 
                     std::cout << "Constructed The Python Interpreter" << std::endl;
-
-                    //Get and Create StringWriter
-                    jclass stringWriterClass = jniEnv->FindClass("java/io/StringWriter");
-                    jmethodID StringWriterconstructor = jniEnv->GetMethodID(stringWriterClass, "<init>", "()V");
-                    jmethodID toStringMethod = jniEnv->GetMethodID(stringWriterClass, "toString", "()Ljava/lang/String;");
-                    jmethodID closeWriterMethod = jniEnv->GetMethodID(stringWriterClass, "close", "()V");
-                    jmethodID flushWriterMethod = jniEnv->GetMethodID(stringWriterClass, "flush", "()V");
-                    jobject stringWriterObj = jniEnv->NewObject(stringWriterClass, StringWriterconstructor);
-
-                    std::cout << "Created String Writer" << std::endl;
 
                     //Link the String Writer to the PYInterpreter
                     jmethodID PYInterpreterSetOut = jniEnv->GetMethodID(PythonInterpreterCalss, "setOut", "(Ljava/io/Writer;)V");
@@ -863,6 +842,18 @@ void MainThread(HMODULE instance)
                     jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetErr, stringWriterObj);
 
                     std::cout << "Linked String Writer" << std::endl;
+
+                    std::chrono::system_clock::time_point begtime = std::chrono::system_clock::now();
+                    std::time_t now_time = std::chrono::system_clock::to_time_t(begtime);
+
+                    std::stringstream timestring;
+                    timestring << "Execution of script at: ";
+                    timestring << std::ctime(&now_time);
+                    timestring << "\n\n";
+                    
+                    jstring curtime = jniEnv->NewStringUTF(timestring.str().c_str());
+
+                    jniEnv->CallVoidMethod(stringWriterObj, writeWriterMethod, curtime);
 
                     std::cout << "Changing Jython Modifier Respectfullness" << std::endl;
                     jclass JythonOptions = jniEnv->FindClass("org/python/core/Options");
@@ -877,6 +868,7 @@ void MainThread(HMODULE instance)
                     else std::cout << "Registry Class was not found" << std::endl;
                     
 
+
                     //Call ExecFile
                     jmethodID PYInterpreterExecFile = jniEnv->GetMethodID(PythonInterpreterCalss, "execfile", "(Ljava/lang/String;)V");
                     if (PYInterpreterExecFile == nullptr) {
@@ -887,21 +879,7 @@ void MainThread(HMODULE instance)
 
                     std::cout << "Executed execfile" << std::endl;
 
-                    //Flush Stream to get output
-                    jniEnv->CallVoidMethod(stringWriterObj, flushWriterMethod);
-
-                    //Capture Output 
-                    jstring RawOutput = (jstring)jniEnv->CallObjectMethod(stringWriterObj, toStringMethod);
-                    std::string Output = jniEnv->GetStringUTFChars(RawOutput, NULL);
-                    if (Output.empty()) {
-                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Script Return Empty!"});
-                    }
-                    else
-                    {
-                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {Output});
-                    }
-
-                    
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Executed Script!"});
 
                     std::cout << "Returned Values" << std::endl;
                 }
@@ -909,6 +887,15 @@ void MainThread(HMODULE instance)
                 
             }
             
+        }
+        else if (called == "getStringWriterData") {
+            jstring returnable = (jstring)jniEnv->CallObjectMethod(stringWriterObj, toStringMethod);
+            std::string toret = jniEnv->GetStringUTFChars(returnable, NULL);
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {toret});
+        }
+        else if (called == "clearStringWriterData") {
+            jniEnv->CallVoidMethod(stringWriterObj, flushWriterMethod);
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Flushed the stringwriter!"});
         }
         else if (called == "uninjectCore") {
             std::cout << "uninjectingJReverse" << std::endl;

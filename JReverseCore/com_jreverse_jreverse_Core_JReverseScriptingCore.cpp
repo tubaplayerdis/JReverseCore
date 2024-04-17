@@ -45,17 +45,25 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
 
     std::printf("Got TIenv Pointer\n");
 
-    std::string clazz = jniEnv->GetStringUTFChars(ClassName, NULL);
+    JNIEnv* env = nullptr;
 
-    std::cout << "Checking Existance of: " << clazz << std::endl;
+    javaVm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
+    if (env == nullptr)
+    {
+        std::printf("[!] Failed to attach to the Java VM.\n");
+    }
 
-    jclass cladd = jniEnv->FindClass(clazz.c_str()); //Does not find some loaded classes for some reason.
-    jclass stringclass = jniEnv->FindClass("java/lang/String");
+    std::string clazz = env->GetStringUTFChars(ClassName, NULL);
+
+    std::cout << "Checking Existance of: " << clazz.c_str() << std::endl;
+
+    jclass cladd = env->FindClass(clazz.c_str()); //Does not find some loaded classes for some reason.
+    jclass stringclass = env->FindClass("java/lang/String");
     if (cladd == nullptr) {
         std::printf("Class Does Not Exist!\n");
-        jstring badstring = jniEnv->NewStringUTF("Class Not Found!");
-        jobjectArray badresult = jniEnv->NewObjectArray(1, stringclass, NULL);
-        jniEnv->SetObjectArrayElement(badresult, 0, badstring);
+        jstring badstring = env->NewStringUTF("Class Not Found!");
+        jobjectArray badresult = env->NewObjectArray(1, stringclass, NULL);
+        env->SetObjectArrayElement(badresult, 0, badstring);
         std::printf("Sending off String Array!\n");
         return badresult;
     }
@@ -79,11 +87,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
 
     std::printf("Got Class Instacnes!\n");
 
-    jobjectArray result = jniEnv->NewObjectArray(count, cladd, NULL);
+    jobjectArray result = env->NewObjectArray(count, cladd, NULL);
 
     for (int i = 0; i < count; i++) {
         jobject cur = objs[i];
-        jniEnv->SetObjectArrayElement(result, i, cur);
+        env->SetObjectArrayElement(result, i, cur);
     }
 
     return result;
