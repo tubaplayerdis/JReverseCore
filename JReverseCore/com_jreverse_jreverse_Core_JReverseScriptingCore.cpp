@@ -190,8 +190,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
     jobjectArray result = globalenv->NewObjectArray(count, cladd, NULL);
 
     for (int i = 0; i < count; i++) {
-        jobject cur = objs[i];
-        globalenv->SetObjectArrayElement(result, i, cur);
+        globalenv->SetObjectArrayElement(result, i, objs[i]);
     }
 
     return result;
