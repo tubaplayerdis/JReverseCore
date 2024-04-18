@@ -735,7 +735,7 @@ void MainThread(HMODULE instance)
                 std::cout << "Starting Native Registration!" << std::endl;
 
 
-                setGlobalEnv(jniEnv);
+                setGlobalEnv(jniEnv, TIenv);
 
                 char MethodName[18] = "GetClassInstances";
                 char MethodSig[40] = "(Ljava/lang/String;)[Ljava/lang/Object;";
@@ -749,11 +749,6 @@ void MainThread(HMODULE instance)
                 }
 
                 std::cout << "Registered Method!" << std::endl;
-
-                jstring curtime = jniEnv->NewStringUTF("java/io/Writer");
-
-                jobjectArray sigma = Java_com_jreverse_jreverse_Core_JReverseScriptingCore_GetClassInstances(jniEnv, NULL, curtime);
-                if (sigma == nullptr) std::printf("Problem!\n");
 
 
                 if (er != "No Error") {

@@ -1,5 +1,6 @@
 #include "ClassFileManager.h"
 #include "ClassFile.h"
+#include <jni.h>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -11,6 +12,10 @@
 std::mutex mtx;
 
 std::vector<ClassFile> ClassFileManager::ClassFilesList = std::vector<ClassFile>{};
+
+std::vector<jclass> ClassFileManager::ClassRefrencesList = std::vector<jclass>{};
+
+JNIEnv* jniEnv = nullptr;
 
 ClassFile ClassFileManager::FindClassFile(std::string name)
 {
@@ -57,4 +62,19 @@ std::vector<std::string> ClassFileManager::GetClassFileNames()
         ReturnVec.push_back(clafil.classname);
     }
     return ReturnVec;
+}
+
+void ClassFileManager::SetEnv(JNIEnv* pointer)
+{
+}
+
+void ClassFileManager::addClassRef(jclass clazz)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    ClassFileManager::ClassRefrencesList.push_back(clazz);
+}
+
+jclass ClassFileManager::findClassRef(const char* name)
+{
+    return nullptr;
 }

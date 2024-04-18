@@ -6,11 +6,65 @@
 #include <windows.h>
 #include <iostream>
 #include <thread>
+#include <vector>
+#include <algorithm>
 
 JNIEnv* globalenv = nullptr;
+jvmtiEnv* TIenv = nullptr;
 
-void setGlobalEnv(JNIEnv* pointer) {
+void removeChars(std::string& str, const std::string& charsToRemove) {
+    for (char c : charsToRemove) {
+        str.erase(std::remove(str.begin(), str.end(), c), str.end());
+    }
+}
+
+// Function to remove the first occurrence of a substring from a string
+void removeFirstOccurrence(std::string& str, const std::string& substr) {
+    size_t pos = str.find(substr);
+    if (pos != std::string::npos) {
+        str.erase(pos, substr.length());
+    }
+}
+
+
+
+jclass getLoadedClassRefrence(jvmtiEnv* TIenv, JNIEnv* jniEnv, const char* classname) {
+    jclass* classespointer;
+    jint class_count;
+    TIenv->GetLoadedClasses(&class_count, &classespointer);
+
+    std::printf("Getting All loaded classes\n\n");
+    for (int i = 0; i < class_count; i++) {
+        jclass clazz = classespointer[i];
+        if (clazz != nullptr) {
+            char* name;
+            jvmtiError error1 = TIenv->GetClassSignature(clazz, &name, NULL);
+            if (error1 != JVMTI_ERROR_NONE) {
+                std::printf("Error With Class Signatures\n");
+            }
+            else
+            {
+                std::string namebuild = std::string(name);
+                removeChars(namebuild, "[;");
+                removeFirstOccurrence(namebuild, "L");
+
+                if (namebuild == classname) return clazz;
+
+                TIenv->Deallocate((unsigned char*)name);
+                
+            }
+
+
+
+        }
+    }
+    return nullptr;
+}
+
+
+void setGlobalEnv(JNIEnv* pointer, jvmtiEnv* pointerr) {
     globalenv = pointer;
+    TIenv = pointerr;
 }
 
 static jvmtiIterationControl JNICALL
@@ -87,13 +141,6 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
     std::cout << atres << std::endl;
 
     if (javaVm == nullptr) std::printf("Extremley Large Problem!");
-    
-    jvmtiEnv* TIenv = nullptr;
-    jint res = javaVm->GetEnv((void**)&TIenv, JVMTI_VERSION_1);
-    if (res != JNI_OK)
-    {
-        std::printf("[!] Failed to retrive JVMTI interface on the Java VM.\n");
-    }
 
     if (globalenv->ExceptionCheck() == true) std::printf("JNI ERROR!");
 
@@ -108,7 +155,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
 
     std::cout << "Checking Existance of: " << clazz.c_str() << std::endl;
 
-    jclass cladd = globalenv->FindClass(clazz.c_str()); //Does not find some loaded classes for some reason.
+    jclass cladd = getLoadedClassRefrence(TIenv, globalenv, clazz.c_str()); //Does not find some loaded classes for some reason.
     CheckJNIErrorCooler(globalenv);
     jclass stringclass = globalenv->FindClass("java/lang/String");
     if (stringclass == nullptr) { std:printf("Class Finding Does not work!"); }
