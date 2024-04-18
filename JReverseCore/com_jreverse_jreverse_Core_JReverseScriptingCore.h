@@ -19,3 +19,5 @@ extern "C" {
 }
 #endif
 #endif
+
+void setGlobalEnv(JNIEnv* pointer);

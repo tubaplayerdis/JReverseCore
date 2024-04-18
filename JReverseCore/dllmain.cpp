@@ -258,7 +258,7 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
         std::cout << "New Class Load" << std::endl;
     }
     else {
-        std::cout << "Class Redefenition" << std::endl;
+       std::cout << "Class Redefenition" << std::endl;
     }
 
     if (name == nullptr) {
@@ -512,34 +512,6 @@ void add_path(JNIEnv* env, const std::string& path)
 }
 
 
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
-    JNIEnv* env;
-    if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
-        return JNI_ERR;
-    }
-
-    //Register Native Methods
-    // Define your JNI methods here
-    char MethodName[18] = "GetClassInstances";
-    char MethodSig[40] = "(Ljava/lang/String;)[Ljava/lang/Object;";
-    JNINativeMethod methods[] = {
-        { MethodName, MethodSig, (void*)&Java_com_jreverse_jreverse_Core_JReverseScriptingCore_GetClassInstances }
-    };
-
-    jclass ScriptingCore = env->FindClass("com/jreverse/jreverse/Core/JReverseScriptingCore");
-
-    // Register the native methods with the class
-    if (env->RegisterNatives(ScriptingCore, methods, 1) != 0) {
-        std::cout << "Register Error!" << std::endl;
-    }
-
-    std::cout << "Registered Method!" << std::endl;
-
-
-    return JNI_VERSION_1_6;
-}
-
-
 void MainThread(HMODULE instance)
 {
     std::printf("JReverse Has Been Injected Successfully!\n");
@@ -756,14 +728,33 @@ void MainThread(HMODULE instance)
 
                 if (ScriptingCore == nullptr) std::cout << "Scripting Core was NULL" << std::endl;
 
-                std::cout << "Starting Native Registration!" << std::endl;        
 
-                JNI_OnLoad(javaVm, nullptr);
+                std::printf("Getting Thread!\n");
+                std::thread::id this_id = std::this_thread::get_id();
+                std::cout << "DLL main thread: " << this_id << std::endl;
+                std::cout << "Starting Native Registration!" << std::endl;
+
+
+                setGlobalEnv(jniEnv);
+
+                char MethodName[18] = "GetClassInstances";
+                char MethodSig[40] = "(Ljava/lang/String;)[Ljava/lang/Object;";
+                JNINativeMethod methods[] = {
+                    { MethodName, MethodSig, (void*)&Java_com_jreverse_jreverse_Core_JReverseScriptingCore_GetClassInstances }
+                };
+
+                // Register the native methods with the class
+                if (jniEnv->RegisterNatives(ScriptingCore, methods, 1) != 0) {
+                    std::cout << "Register Error!" << std::endl;
+                }
+
+                std::cout << "Registered Method!" << std::endl;
 
                 jstring curtime = jniEnv->NewStringUTF("java/io/Writer");
 
                 jobjectArray sigma = Java_com_jreverse_jreverse_Core_JReverseScriptingCore_GetClassInstances(jniEnv, NULL, curtime);
                 if (sigma == nullptr) std::printf("Problem!\n");
+
 
                 if (er != "No Error") {
                     PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", er});
