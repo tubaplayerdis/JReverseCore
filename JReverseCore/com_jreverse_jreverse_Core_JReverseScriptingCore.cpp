@@ -193,5 +193,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
         globalenv->SetObjectArrayElement(result, i, objs[i]);
     }
 
+    //CheckJNIErrorCooler(globalenv);
+
     return result;
 }

@@ -770,6 +770,27 @@ void MainThread(HMODULE instance)
 
                         const char* err = CheckJNIError(jniEnv);
 
+                        std::cout << "Testing Script Capability!" << std::endl;
+
+                        jclass PythonInterpreterCalss = jniEnv->FindClass("org/python/util/PythonInterpreter");
+                        jmethodID PYconstructor = jniEnv->GetMethodID(PythonInterpreterCalss, "<init>", "()V");
+                        jobject PYInterpreterOBJ = jniEnv->NewObject(PythonInterpreterCalss, PYconstructor);
+
+                        jmethodID PYInterpreterSetOut = jniEnv->GetMethodID(PythonInterpreterCalss, "setOut", "(Ljava/io/Writer;)V");
+                        jmethodID PYInterpreterSetErr = jniEnv->GetMethodID(PythonInterpreterCalss, "setErr", "(Ljava/io/Writer;)V");
+                        jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetOut, stringWriterObj);
+                        jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetErr, stringWriterObj);
+
+                        jmethodID PYInterpreterExec = jniEnv->GetMethodID(PythonInterpreterCalss, "exec", "(Ljava/lang/String;)V");
+                        if (PYInterpreterExec == nullptr) {
+                            std::cout << "execfile signature incorrect!" << std::endl;
+                        }
+                        jstring ArgsString = jniEnv->NewStringUTF("print(\"The scripting system was setup correctly!\")");
+                        jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterExec, ArgsString);
+
+                        CheckJNIError(jniEnv);
+
+
                         if (result == 1) {
                             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", err});
                         }
@@ -846,6 +867,8 @@ void MainThread(HMODULE instance)
                     jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetOut, stringWriterObj);
                     jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetErr, stringWriterObj);
 
+                    CheckJNIError(jniEnv);
+
                     std::cout << "Linked String Writer" << std::endl;
 
                     std::chrono::system_clock::time_point begtime = std::chrono::system_clock::now();
@@ -854,7 +877,7 @@ void MainThread(HMODULE instance)
                     std::stringstream timestring;
                     timestring << "Execution of script at: ";
                     timestring << std::ctime(&now_time);
-                    timestring << "\n\n";
+                    timestring << "\n-------------------------------------------------------\n";
                     
                     jstring curtime = jniEnv->NewStringUTF(timestring.str().c_str());
 
@@ -881,6 +904,8 @@ void MainThread(HMODULE instance)
                     }
                     jstring ArgsString = jniEnv->NewStringUTF(args[0].c_str());
                     jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterExecFile, ArgsString);
+
+                    CheckJNIError(jniEnv);
 
                     std::cout << "Executed execfile" << std::endl;
 
