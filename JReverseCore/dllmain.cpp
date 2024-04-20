@@ -864,6 +864,7 @@ void MainThread(HMODULE instance)
                     //Link the String Writer to the PYInterpreter
                     jmethodID PYInterpreterSetOut = jniEnv->GetMethodID(PythonInterpreterCalss, "setOut", "(Ljava/io/Writer;)V");
                     jmethodID PYInterpreterSetErr = jniEnv->GetMethodID(PythonInterpreterCalss, "setErr", "(Ljava/io/Writer;)V");
+                    jmethodID PYInterpreterClose = jniEnv->GetMethodID(PythonInterpreterCalss, "close", "()V");
                     jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetOut, stringWriterObj);
                     jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetErr, stringWriterObj);
 
@@ -877,7 +878,7 @@ void MainThread(HMODULE instance)
                     std::stringstream timestring;
                     timestring << "Execution of script at: ";
                     timestring << std::ctime(&now_time);
-                    timestring << "\n-------------------------------------------------------\n";
+                    timestring << "-------------------------------------------------------\n";
                     
                     jstring curtime = jniEnv->NewStringUTF(timestring.str().c_str());
 

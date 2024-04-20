@@ -7,9 +7,17 @@
 #include <namedpipeapi.h>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <WinUser.h>
+#include <dwmapi.h>
 #include "SharedMemManager.h"
 #include "PipeAPI.h"
 #include "JReverseLogger.h"
+
+void SetWindowBobColor(HWND hwnd)
+{
+    BOOL USE_DARK_MODE = true;
+    //DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE::DWMWA_USE_IMMERSIVE_DARK_MODE,&USE_DARK_MODE, sizeof(USE_DARK_MODE));
+}
 
 
 bool InjectOnStartup(char* dllName, std::wstring apppath)
@@ -95,6 +103,8 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InitBrid
 {
     JReverseLogger logger = JReverseLogger(env);
     logger.Log("Initalizing Bridge...");
+    HWND sus = FindWindowA(NULL, "JReverse");
+    SetWindowBobColor(sus);
 }
 
 JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_StartAndInjectDLL(JNIEnv* env, jclass, jstring Location, jstring app)

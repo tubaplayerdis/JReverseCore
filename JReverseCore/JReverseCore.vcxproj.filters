@@ -31,6 +31,9 @@
     <Filter Include="Source Files\jni">
       <UniqueIdentifier>{f7fd1609-e647-47cd-851c-a05d7ff28dc4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Jython">
+      <UniqueIdentifier>{ca926d93-3874-4ce2-9eff-710b70742392}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -66,6 +69,12 @@
     <ClInclude Include="datastore.h">
       <Filter>Header Files\jni</Filter>
     </ClInclude>
+    <ClInclude Include="JythonManager.h">
+      <Filter>Header Files\Jython</Filter>
+    </ClInclude>
+    <ClInclude Include="JythonInterpreter.h">
+      <Filter>Header Files\Jython</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -93,6 +102,9 @@
       <Filter>Source Files\jni</Filter>
     </ClCompile>
     <ClCompile Include="datastore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="JythonInterpreter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
