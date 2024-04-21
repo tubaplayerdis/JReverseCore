@@ -46,10 +46,11 @@ jclass getLoadedClassRefrence(jvmtiEnv* TIenv, JNIEnv* jniEnv, const char* class
             else
             {
                 std::string namebuild = std::string(name);
-                removeChars(namebuild, "[;");
-                removeFirstOccurrence(namebuild, "L");
 
-                if (namebuild == classname) return clazz;
+                if (namebuild == classname) {
+                    std::cout << "Loaded Class Ref: " << namebuild << " Was matched to: " << classname << std::endl;
+                    return clazz;
+                }               
 
                 TIenv->Deallocate((unsigned char*)name);
                 
@@ -189,30 +190,40 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
 
     std::printf("Got Class Instacnes!\n");
 
-
-    if (!globalenv->IsInstanceOf(objs[0], cladd)) {
-        jobjectArray result = globalenv->NewObjectArray(1, stringclass, NULL);
-
-        jclass ResultedClass = jniEnv->GetObjectClass(objs[0]);
-
-        char* GenericName;
-        TIenv->GetClassSignature(ResultedClass, NULL, &GenericName);
-        std::stringstream creat;
-        creat << "Class Mismatch! Expected:\n";
-        creat << clazz << "\n";
-        creat << "Provided: \n";
-        creat << GenericName;
-
-        jstring pass = globalenv->NewStringUTF(creat.str().c_str());
-        globalenv->SetObjectArrayElement(result, 0, pass);
-        return result;
-    }
+    char* ExSignatiureName = nullptr;
+    TIenv->GetClassSignature(cladd, &ExSignatiureName, NULL);
+    std::cout << "Expecting: \n" << ExSignatiureName << std::endl;
 
     jobjectArray result = globalenv->NewObjectArray(count, cladd, NULL);
 
     for (int i = 0; i < count; i++) {
-        globalenv->SetObjectArrayElement(result, i, objs[i]);
+        std::cout << "Looping through: " << i << std::endl;
+        if (globalenv->IsInstanceOf(objs[i], cladd)) {
+            jclass ResultedClass = jniEnv->GetObjectClass(objs[i]);
+            char* SignatiureName = nullptr;
+            TIenv->GetClassSignature(ResultedClass, &SignatiureName, NULL);
+            if (SignatiureName == nullptr) std::cout << "Signatue was NULL!" << std::endl;
+            std::cout << "Sending off: " << SignatiureName << std::endl;
+            globalenv->SetObjectArrayElement(result, i, objs[i]);
+            TIenv->Deallocate((unsigned char*)SignatiureName);
+        }
+        else
+        {
+            jclass ResultedClass = jniEnv->GetObjectClass(objs[i]);
+            char* SignatiureName = nullptr;
+            TIenv->GetClassSignature(ResultedClass, &SignatiureName, NULL);
+            if (ResultedClass == cladd) {
+                std::cout << "Recomp is Sucsessfull, Sending off: " << SignatiureName << std::endl;
+            }
+            else {
+                std::cout << "Class Mismatch! Expected: " << clazz << " Provided: " << SignatiureName << std::endl;
+            }
+            TIenv->Deallocate((unsigned char*)SignatiureName);
+        }
     }
+
+    TIenv->Deallocate((unsigned char*)objs);
+    TIenv->Deallocate((unsigned char*)ExSignatiureName);
 
     //CheckJNIErrorCooler(globalenv);
 
