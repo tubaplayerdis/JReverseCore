@@ -21,6 +21,8 @@
 #include "ClassFileManager.h"
 #include "datastore.h"
 #include "com_jreverse_jreverse_Core_JReverseScriptingCore.h"
+#include "JythonManager.h"
+#include "JythonInterpreter.h"
 
 
 
@@ -791,6 +793,19 @@ void MainThread(HMODULE instance)
                         CheckJNIError(jniEnv);
 
 
+                        std::cout << "Changing Jython Modifier Respectfullness" << std::endl;
+                        jclass JythonOptions = jniEnv->FindClass("org/python/core/Options");
+                        if (JythonOptions != nullptr) {
+                            jfieldID RespectModifiers = jniEnv->GetStaticFieldID(JythonOptions, "respectJavaAccessibility", "Z");
+                            if (RespectModifiers != nullptr) {
+                                jboolean flasebool = (jboolean)false;
+                                jniEnv->SetStaticBooleanField(JythonOptions, RespectModifiers, flasebool);
+                            }
+                            else std::cout << "Registry Class Field was not found" << std::endl;
+                        }
+                        else std::cout << "Registry Class was not found" << std::endl;
+
+
                         if (result == 1) {
                             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"1", err});
                         }
@@ -808,7 +823,31 @@ void MainThread(HMODULE instance)
                 }
             }
         }
+        else if (called == "getInterpreterIDS") {
+            std::vector<std::string> ReturnList;
+            std::vector<int> MainList = JythonManager::GetIDS();
+            for (int i = 0; i < MainList.size(); i++) {
+                ReturnList.push_back(std::to_string(MainList[i]));
+            }
+            PipeClientAPI::ReturnPipe.WritePipe(ReturnList);
+        }
+        else if (called == "deleteInterpreter") {
+            int id = std::stoi(args[0]);
+            JythonManager::RemoveByID(id);
+        }
+        else if (called == "createInterpreter") {
+            jclass PythonInterpreterCalss = jniEnv->FindClass("org/python/util/PythonInterpreter");
+            if (PythonInterpreterCalss == nullptr) {
+                std::cout << "Failed to find Python Interperter Class When Making New Interpreter!" << std::endl;
+            }
+            JythonInterpreter what(jniEnv, stringWriterObj, PythonInterpreterCalss, writeWriterMethod);
+            std::cout << "Adding Interpreter!" << std::endl;
+            JythonManager::AddInterpreter(what);
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {std::to_string(what.ID)});
+        }
         else if (called == "addClass") {
+            //Add ClassFile to classpath
+#pragma region OldIMPL
             jclass ScriptingCore = jniEnv->FindClass("com/jreverse/jreverse/Core/JReverseScriptingCore");
             if (ScriptingCore == nullptr) {
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Scripting Core Class Not Initalized!"});
@@ -835,7 +874,7 @@ void MainThread(HMODULE instance)
                     PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{ resultString });
                 }
             }
-            
+#pragma endregion
         }
         else if (called == "runScript")
         {
@@ -845,7 +884,7 @@ void MainThread(HMODULE instance)
             }
             else
             {
-               
+                //args are ID, path
                 std::cout << "Checking for Interpreter class" << std::endl;
                 jclass PythonInterpreterCalss = jniEnv->FindClass("org/python/util/PythonInterpreter");
                 if (PythonInterpreterCalss == nullptr) {
@@ -853,65 +892,23 @@ void MainThread(HMODULE instance)
                 }
                 else
                 {
-                    
-                    std::cout << "Running Script Process" << std::endl;
-                    //Get constructor and create the Interpreter Object.
-                    jmethodID PYconstructor = jniEnv->GetMethodID(PythonInterpreterCalss, "<init>", "()V");
-                    jobject PYInterpreterOBJ = jniEnv->NewObject(PythonInterpreterCalss, PYconstructor);
-
-                    std::cout << "Constructed The Python Interpreter" << std::endl;
-
-                    //Link the String Writer to the PYInterpreter
-                    jmethodID PYInterpreterSetOut = jniEnv->GetMethodID(PythonInterpreterCalss, "setOut", "(Ljava/io/Writer;)V");
-                    jmethodID PYInterpreterSetErr = jniEnv->GetMethodID(PythonInterpreterCalss, "setErr", "(Ljava/io/Writer;)V");
-                    jmethodID PYInterpreterClose = jniEnv->GetMethodID(PythonInterpreterCalss, "close", "()V");
-                    jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetOut, stringWriterObj);
-                    jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterSetErr, stringWriterObj);
-
-                    CheckJNIError(jniEnv);
-
-                    std::cout << "Linked String Writer" << std::endl;
-
-                    std::chrono::system_clock::time_point begtime = std::chrono::system_clock::now();
-                    std::time_t now_time = std::chrono::system_clock::to_time_t(begtime);
-
-                    std::stringstream timestring;
-                    timestring << "Execution of script at: ";
-                    timestring << std::ctime(&now_time);
-                    timestring << "-------------------------------------------------------\n";
-                    
-                    jstring curtime = jniEnv->NewStringUTF(timestring.str().c_str());
-
-                    jniEnv->CallVoidMethod(stringWriterObj, writeWriterMethod, curtime);
-
-                    std::cout << "Changing Jython Modifier Respectfullness" << std::endl;
-                    jclass JythonOptions = jniEnv->FindClass("org/python/core/Options");
-                    if (JythonOptions != nullptr) {
-                        jfieldID RespectModifiers = jniEnv->GetStaticFieldID(JythonOptions, "respectJavaAccessibility", "Z");
-                        if (RespectModifiers != nullptr) {
-                            jboolean flasebool = (jboolean)false;
-                            jniEnv->SetStaticBooleanField(JythonOptions, RespectModifiers, flasebool);
-                        }
-                        else std::cout << "Registry Class Field was not found" << std::endl;
+                    int ID = std::stoi(args[1]);
+                    JythonReturns ret = JythonManager::RunOnInterpreter(ID, args[0]);
+                    switch (ret)
+                    {
+                    case SUCCESS:
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Executed Script!"});
+                        break;
+                    case INTERPRETER_NOT_FOUND:
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Interpreter was not found"});
+                        break;
+                    case FAILURE:
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Failed Execution"});
+                        break;
+                    default:
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Something went wrong"});
+                        break;
                     }
-                    else std::cout << "Registry Class was not found" << std::endl;
-                    
-
-
-                    //Call ExecFile
-                    jmethodID PYInterpreterExecFile = jniEnv->GetMethodID(PythonInterpreterCalss, "execfile", "(Ljava/lang/String;)V");
-                    if (PYInterpreterExecFile == nullptr) {
-                        std::cout << "execfile signature incorrect!" << std::endl;
-                    }
-                    jstring ArgsString = jniEnv->NewStringUTF(args[0].c_str());
-                    jniEnv->CallVoidMethod(PYInterpreterOBJ, PYInterpreterExecFile, ArgsString);
-
-                    CheckJNIError(jniEnv);
-
-                    std::cout << "Executed execfile" << std::endl;
-
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Executed Script!"});
-
                     std::cout << "Returned Values" << std::endl;
                 }
                 

@@ -34,6 +34,9 @@
     <Filter Include="Header Files\Jython">
       <UniqueIdentifier>{ca926d93-3874-4ce2-9eff-710b70742392}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Jython">
+      <UniqueIdentifier>{a000b7d9-b7b1-4e85-a8d0-2316501bf461}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -75,6 +78,9 @@
     <ClInclude Include="JythonInterpreter.h">
       <Filter>Header Files\Jython</Filter>
     </ClInclude>
+    <ClInclude Include="JythonReturns.h">
+      <Filter>Header Files\Jython</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -105,7 +111,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="JythonInterpreter.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Jython</Filter>
+    </ClCompile>
+    <ClCompile Include="JythonManager.cpp">
+      <Filter>Source Files\Jython</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

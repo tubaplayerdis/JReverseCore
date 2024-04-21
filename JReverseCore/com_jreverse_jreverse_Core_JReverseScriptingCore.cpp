@@ -3,6 +3,7 @@
 #include "jni.h"
 #include "jvmticmlr.h"
 #include <string>
+#include <sstream>
 #include <windows.h>
 #include <iostream>
 #include <thread>
@@ -168,6 +169,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
         return badresult;
     }
 
+
     std::printf("Checked Class Existance!\n");
 
     jvmtiError iterr = TIenv->IterateOverInstancesOfClass(cladd, JVMTI_HEAP_OBJECT_EITHER, heap_callback, NULL);
@@ -186,6 +188,25 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Core_JReverseScripting
     std::printf("\n");
 
     std::printf("Got Class Instacnes!\n");
+
+
+    if (!globalenv->IsInstanceOf(objs[0], cladd)) {
+        jobjectArray result = globalenv->NewObjectArray(1, stringclass, NULL);
+
+        jclass ResultedClass = jniEnv->GetObjectClass(objs[0]);
+
+        char* GenericName;
+        TIenv->GetClassSignature(ResultedClass, NULL, &GenericName);
+        std::stringstream creat;
+        creat << "Class Mismatch! Expected:\n";
+        creat << clazz << "\n";
+        creat << "Provided: \n";
+        creat << GenericName;
+
+        jstring pass = globalenv->NewStringUTF(creat.str().c_str());
+        globalenv->SetObjectArrayElement(result, 0, pass);
+        return result;
+    }
 
     jobjectArray result = globalenv->NewObjectArray(count, cladd, NULL);
 

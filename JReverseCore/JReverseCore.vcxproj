@@ -157,6 +157,7 @@
     <ClInclude Include="JReversePipeInfo.h" />
     <ClInclude Include="JythonInterpreter.h" />
     <ClInclude Include="JythonManager.h" />
+    <ClInclude Include="JythonReturns.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PipeClientAPI.h" />
     <ClInclude Include="PipeManager.h" />
@@ -169,6 +170,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="JReversePipeHelper.cpp" />
     <ClCompile Include="JythonInterpreter.cpp" />
+    <ClCompile Include="JythonManager.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
