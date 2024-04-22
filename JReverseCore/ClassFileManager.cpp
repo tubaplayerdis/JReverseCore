@@ -19,6 +19,7 @@ JNIEnv* jniEnv = nullptr;
 
 ClassFile ClassFileManager::FindClassFile(std::string name)
 {
+    std::cout << "Searching for: " << name << std::endl;
     for (ClassFile clafil : ClassFileManager::ClassFilesList) {
         if (clafil.classname == name) return clafil;
     }

@@ -518,50 +518,87 @@ void MainThread(HMODULE instance)
 {
     std::printf("JReverse Has Been Injected Successfully!\n");
     std::cerr << "Testing STD:ERR stream" << std::endl;
-    using jniGetCreatedJavaVMs_t = jint(*)(JavaVM** vmBuf, jsize bufLen, jsize* nVMs);
 
-    
+
+    using jniGetCreatedJavaVMs_t = jint(*)(JavaVM** vmBuf, jsize bufLen, jsize* nVMs);
+   
+
+    /*
     PipeManager::SetupClient();
     std::printf(PipeManager::ReadString().c_str());
     std::printf("\n");
     
     PipeManager::WriteString("Testing Shared Memory Pipeline! - From Injected Application");
+    */
 
-    const auto jvmHandle = GetModuleHandleW(L"jvm.dll");
-    if (jvmHandle == nullptr)
-    {
-        std::printf("[!] Failed to retrieve handle for \"jvm.dll\"!\n");
-        return;
+    HMODULE jvmHandle = nullptr;
+    while (true) {
+        jvmHandle = GetModuleHandleW(L"jvm.dll");
+        if (jvmHandle == nullptr)
+        {
+            std::printf("[!] Failed to retrieve handle for \"jvm.dll\"!\n");
+        }
+        else {
+            std::printf("Got jvm.dll Handle!\n");
+            break;
+        }
     }
+    
 
     const auto jniGetCreatedJavaVMs = reinterpret_cast<jniGetCreatedJavaVMs_t>(GetProcAddress(
         jvmHandle, "JNI_GetCreatedJavaVMs"));
 
     JavaVM* javaVm = nullptr;
     jniGetCreatedJavaVMs(&javaVm, 1, nullptr);
-    if (javaVm == nullptr)
-    {
-        std::printf("[!] Failed to retrieve created Java VMs!\n");
-        return;
+    while (true) {
+        jniGetCreatedJavaVMs(&javaVm, 1, nullptr);
+        if (javaVm == nullptr)
+        {
+            std::printf("[!] Failed to retrieve created Java VMs!\n");
+        }
+        else
+        {
+            std::printf("Got JavaVM!\n");
+            break;
+        }
     }
 
     JNIEnv* jniEnv = nullptr;
-
-    javaVm->AttachCurrentThread(reinterpret_cast<void**>(&jniEnv), nullptr);
-    if (jniEnv == nullptr)
+    Sleep(10);
+    while (true)
     {
-        std::printf("[!] Failed to attach to the Java VM.\n");
-        return;
+        if (javaVm->AttachCurrentThread(reinterpret_cast<void**>(&jniEnv), nullptr) != JNI_OK) {
+            std::cout << "Not Okay!" << std::endl;
+        }
+        if (jniEnv == nullptr)
+        {
+            std::printf("[!] Failed to attach to the Java VM.\n");
+        }
+        else {
+            std::printf("Got JNI ENV\n");
+            break;
+        }
     }
 
 
     jvmtiEnv* TIenv = nullptr;
-    jint res = javaVm->GetEnv((void**)&TIenv, JVMTI_VERSION_1);
-    if (res != JNI_OK)
-    {
-        std::printf("[!] Failed to attach JVMTI interface to the Java VM.\n");
-        return;
+    while (true) {
+        jint res = javaVm->GetEnv((void**)&TIenv, JVMTI_VERSION_1);
+        if (TIenv == nullptr) {
+            std::printf("[!] Failed to Find JVMTI interface with the Java VM.\n");
+        }
+        else {
+            std::printf("Got the TIENV\n");
+            if (res != JNI_OK)
+            {
+                std::printf("[!] Error With JVMTIENV\n");                
+            }
+            break;
+        }
     }
+
+    std::printf("Got the JVMTI Interface!\n");
+
 
     static jvmtiCapabilities capa;
     (void)memset(&capa, 0, sizeof(jvmtiCapabilities));
@@ -602,6 +639,8 @@ void MainThread(HMODULE instance)
 
 
 
+
+
     std::printf("Enabeld Class file load hooks\n");
 
     JReverseStore::jvmtienv = TIenv;
@@ -611,7 +650,9 @@ void MainThread(HMODULE instance)
 
     std::printf("Connecting to Client Pipe API...\n");
 
-    PipeClientAPI::PrintPipes();
+    //PipeClientAPI::PrintPipes();
+    std::cout << "TO init Function Call Loop: " << std::endl;
+    Sleep(2000);
 
     std::printf("Starting Function Call Loop\n");
 
@@ -668,7 +709,7 @@ void MainThread(HMODULE instance)
             PipeClientAPI::ReturnPipe.WritePipe(getMethodBytecodes(TIenv, jniEnv, args[0], args[1], args[2], args[3]));
         }
         else if (called == "getClassBytecodes") {
-            std::printf("Getting Class Bytecodes");
+            std::printf("Getting Class Bytecodes\n");
             ClassFile found = ClassFileManager::FindClassFile(args[0]);
             if (found.classname == "NOT FOUND") {
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Class File Not Found", "Class File Not Found"});

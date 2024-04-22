@@ -24,7 +24,7 @@ bool InjectOnStartup(char* dllName, std::wstring apppath)
 {
     STARTUPINFO startupInfo = { sizeof(startupInfo) };
     PROCESS_INFORMATION processInfo;
-    CreateProcess(apppath.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo);
+    CreateProcessW(apppath.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startupInfo, &processInfo);
 
     HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, false, processInfo.dwProcessId);
     if (h)
@@ -107,13 +107,21 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InitBrid
     SetWindowBobColor(sus);
 }
 
+std::wstring to_wstring(const std::string& stringToConvert)
+{
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, stringToConvert.c_str(), static_cast<int>(stringToConvert.length()), NULL, 0);
+    std::wstring wide_str(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, stringToConvert.c_str(), static_cast<int>(stringToConvert.length()), &wide_str[0], size_needed);
+    return wide_str;
+}
+
 JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_StartAndInjectDLL(JNIEnv* env, jclass, jstring Location, jstring app)
 {
     char* location = (char*)env->GetStringUTFChars(Location, 0);
     std::string apppath = env->GetStringUTFChars(app, 0);
-    bool InjectCode = InjectOnStartup(location, L"dont use");
-    env->ReleaseStringUTFChars(Location, location);
-    env->ReleaseStringUTFChars(app, apppath.c_str());
+    bool InjectCode = InjectOnStartup(location, to_wstring(apppath));
+    //env->ReleaseStringUTFChars(Location, location);
+    //env->ReleaseStringUTFChars(app, apppath.c_str());
     if (InjectCode == false) { return (jint)1; }
     else { return (jint)0; }
 }
