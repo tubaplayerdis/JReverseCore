@@ -606,6 +606,7 @@ void MainThread(HMODULE instance)
     capa.can_get_source_file_name = 1;
     capa.can_get_bytecodes = 1;
     capa.can_retransform_classes = 1;
+    capa.can_redefine_classes = 1;
     capa.can_generate_all_class_hook_events = 1;
 
     jvmtiError erro;
@@ -969,6 +970,11 @@ void MainThread(HMODULE instance)
         else if (called == "uninjectCore") {
             std::cout << "uninjectingJReverse" << std::endl;
             break;
+        }
+        else if (called == "redefineClass") {
+            jvmtiClassDefinition* def;
+            def->class_bytes = nullptr;
+            TIenv->RedefineClasses(1, def);
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
