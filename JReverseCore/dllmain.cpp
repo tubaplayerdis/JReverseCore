@@ -606,7 +606,9 @@ void MainThread(HMODULE instance)
     capa.can_get_source_file_name = 1;
     capa.can_get_bytecodes = 1;
     capa.can_retransform_classes = 1;
+    capa.can_retransform_any_class = 1;
     capa.can_redefine_classes = 1;
+    capa.can_redefine_any_class = 1;
     capa.can_generate_all_class_hook_events = 1;
 
     jvmtiError erro;
@@ -972,9 +974,38 @@ void MainThread(HMODULE instance)
             break;
         }
         else if (called == "redefineClass") {
-            jvmtiClassDefinition* def;
-            def->class_bytes = nullptr;
-            TIenv->RedefineClasses(1, def);
+            if (args[0].empty() || args[1].empty()) { std::printf("ARGS NULL"); PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Args NULL"}); }
+            else {
+                //0 = jclass, 1=bytecodes
+                jclass respectiveclass = jniEnv->FindClass(args[0].c_str());
+
+                std::cout << "Got Respective Class!" << std::endl;
+
+                if (respectiveclass == nullptr) std::printf("Respective Class NULL!");
+
+                std::string input_string = args[1];
+                std::vector<unsigned char> bytecode(input_string.begin(), input_string.end());
+                const size_t result_size = bytecode.size() / 2;
+                unsigned char* result = new unsigned char[result_size];
+
+                for (size_t i = 0; i < result_size; ++i) {
+                    std::string byte_string = input_string.substr(i * 2, 2);
+                    result[i] = static_cast<unsigned char>(std::stoi(byte_string, nullptr, 16));
+                }
+
+                std::cout << "Implemented Bytecodes" << std::endl;
+
+                jvmtiClassDefinition def;
+                def.class_bytes = result;
+                def.class_byte_count = result_size;
+                def.klass = respectiveclass;
+                jvmtiError res = TIenv->RedefineClasses(1, &def);
+                std::string callback = GetJVMTIError(res);
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{callback});
+
+                delete[] result;//Prevent Memory Leaks
+            }
+            
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
