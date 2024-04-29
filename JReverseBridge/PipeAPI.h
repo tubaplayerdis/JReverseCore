@@ -27,6 +27,7 @@ public:
     static JReversePipe<std::vector<std::string>> FunctionArgPipe;
     static JReversePipe<std::vector<std::string>> ReturnPipe;
     static JReversePipe<std::vector<std::string>> PipeNamePipe;
+    static JReversePipe<std::vector<std::string>> StartupRulesPipe;
     static JReversePipe<std::string> CommunicationPipe;
     //ref list
 };

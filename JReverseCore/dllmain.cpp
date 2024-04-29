@@ -271,6 +271,51 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     // Perform actions when a class file is loaded
     std::cout << "Loading Class: " << name << "\n";
 
+    std::vector<std::string> toiter = PipeClientAPI::StartupPipe.ReadPipe();
+
+    for (int i = 0; i < toiter.size(); i++)
+    {
+        if (toiter[i] == name) {
+            std::cout << "Class comparision True!" << std::endl;
+
+            std::string pre = toiter[i+1];
+            std::vector<unsigned char> bytecode(pre.begin(), pre.end());
+            
+            const size_t result_size = bytecode.size() / 2;
+            unsigned char* result = new unsigned char[result_size];
+
+            for (size_t i = 0; i < result_size; ++i) {
+                std::string byte_string = pre.substr(i* 2, 2);
+                result[i] = static_cast<unsigned char>(std::stoi(byte_string, nullptr, 16));
+            }
+
+            std::cout << "New Data Len: " << result_size << std::endl;
+            std::cout << "Old Data Len: " << class_data_len << std::endl;
+            
+
+            std::cout << "Original Bytecode: " << std::endl;
+            std::cout << class_data << std::endl;
+            std::cout << "\n\n\n\n";
+
+            std::cout << "To be modded bytecode: " << std::endl;
+            std::cout << result << std::endl;
+            std::cout << "\n\n\n\n";
+
+            *new_class_data_len = result_size;
+            *new_class_data = new unsigned char[result_size];
+            memcpy(*new_class_data, result, result_size);
+
+            system("pause");
+
+            std::cout << "MODIFIED CLASS: " << name << std::endl;           
+            ClassFile curfile;
+            curfile.bytecodes = pre;
+            curfile.classname = name;
+            ClassFileManager::AddClassFile(curfile);
+            return;
+        }
+    }
+
     // Print the bytecode of the loaded class
     std::vector<unsigned char> bytecode(class_data, class_data + class_data_len);
     std::stringstream toadd;

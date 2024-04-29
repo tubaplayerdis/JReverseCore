@@ -14,6 +14,7 @@ JReversePipeClient<std::string> PipeClientAPI::FunctionPipe = JReversePipeClient
 JReversePipeClient<std::vector<std::string>> PipeClientAPI::FunctionArgPipe = JReversePipeClient<std::vector<std::string>>("CriticalFunctionArgPipe", boost::interprocess::read_write);
 JReversePipeClient<std::vector<std::string>> PipeClientAPI::ReturnPipe = JReversePipeClient<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write);
 JReversePipeClient<std::vector<std::string>> PipeClientAPI::PipeNamePipe = JReversePipeClient<std::vector<std::string>>("CriticalPipeNamePipe", boost::interprocess::read_write);
+JReversePipeClient<std::vector<std::string>> PipeClientAPI::StartupPipe = JReversePipeClient<std::vector<std::string>>("CriticalStartupPipe", boost::interprocess::read_write);
 JReversePipeClient<std::string> PipeClientAPI::CommunicationPipe = JReversePipeClient<std::string>("CriticalCommunicationPipe", boost::interprocess::read_write);
 
 std::vector<std::string> PipeClientAPI::GetAllPipes()

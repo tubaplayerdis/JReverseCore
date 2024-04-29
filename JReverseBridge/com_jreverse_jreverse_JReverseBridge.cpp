@@ -136,6 +136,36 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InjectDL
     else { return (jint)0; }
 }
 
+JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStartupPipe(JNIEnv* env, jclass, jobjectArray rulesArray)
+{
+    jclass RuleClass = env->FindClass("com/jreverse/jreverse/StartupRule");
+    jfieldID RuleNameID = env->GetFieldID(RuleClass, "ClassName", "Ljava/lang/String;");
+    jfieldID RuleBytecodesID = env->GetFieldID(RuleClass, "ByteCodes", "Ljava/lang/String;");
+    jsize ArraySize = env->GetArrayLength(rulesArray);
+
+    std::vector<std::string> retunable = std::vector<std::string>{"NO ARGS"};
+
+    if (ArraySize < 1) {
+        PipeAPI::StartupRulesPipe.WritePipe(retunable);
+        return 1;
+    }
+
+    retunable.clear();
+
+    for (int i = 0; i < ArraySize; i++) {
+        jobject element = env->GetObjectArrayElement(rulesArray, i);
+        jstring jrulename = (jstring)env->GetObjectField(element, RuleNameID);
+        jstring jrulebytecodes = (jstring)env->GetObjectField(element, RuleBytecodesID);
+        std::string rulename = env->GetStringUTFChars(jrulename, NULL);
+        std::string rulebytecodes = env->GetStringUTFChars(jrulebytecodes, NULL);
+        retunable.push_back(rulename);
+        retunable.push_back(rulebytecodes);
+    }
+
+    PipeAPI::StartupRulesPipe.WritePipe(retunable);
+    return 0;
+}
+
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_SetupPipe(JNIEnv*, jclass)
 {
     SharedMemManager::Setup();

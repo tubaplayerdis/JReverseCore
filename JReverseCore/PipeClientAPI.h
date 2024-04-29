@@ -22,5 +22,6 @@ public:
     static JReversePipeClient<std::vector<std::string>> FunctionArgPipe;
     static JReversePipeClient<std::vector<std::string>> ReturnPipe;
     static JReversePipeClient<std::vector<std::string>> PipeNamePipe;
+    static JReversePipeClient<std::vector<std::string>> StartupPipe;
     static JReversePipeClient<std::string> CommunicationPipe;
 };
