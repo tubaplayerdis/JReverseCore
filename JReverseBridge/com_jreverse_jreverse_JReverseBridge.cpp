@@ -141,6 +141,7 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     jclass RuleClass = env->FindClass("com/jreverse/jreverse/StartupRule");
     jfieldID RuleNameID = env->GetFieldID(RuleClass, "ClassName", "Ljava/lang/String;");
     jfieldID RuleBytecodesID = env->GetFieldID(RuleClass, "ByteCodes", "Ljava/lang/String;");
+    jfieldID RuleIsBypassID = env->GetFieldID(RuleClass, "isBypass", "Z");
     jsize ArraySize = env->GetArrayLength(rulesArray);
 
     std::vector<std::string> retunable = std::vector<std::string>{"NO ARGS"};
@@ -156,10 +157,14 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
         jobject element = env->GetObjectArrayElement(rulesArray, i);
         jstring jrulename = (jstring)env->GetObjectField(element, RuleNameID);
         jstring jrulebytecodes = (jstring)env->GetObjectField(element, RuleBytecodesID);
+        jboolean jruleisbypass = env->GetBooleanField(element, RuleIsBypassID);
         std::string rulename = env->GetStringUTFChars(jrulename, NULL);
         std::string rulebytecodes = env->GetStringUTFChars(jrulebytecodes, NULL);
+        std::string ruleisbypass = "false";
+        if ((bool)jruleisbypass) ruleisbypass = "true";
         retunable.push_back(rulename);
         retunable.push_back(rulebytecodes);
+        retunable.push_back(ruleisbypass);
     }
 
     PipeAPI::StartupRulesPipe.WritePipe(retunable);
