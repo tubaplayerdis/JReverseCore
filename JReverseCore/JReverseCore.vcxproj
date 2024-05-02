@@ -161,6 +161,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="PipeClientAPI.h" />
     <ClInclude Include="PipeManager.h" />
+    <ClInclude Include="StartupRule.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\JReverseBridge\JReversePipeHelper.cpp" />

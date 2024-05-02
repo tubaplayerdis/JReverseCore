@@ -23,6 +23,7 @@
 #include "com_jreverse_jreverse_Core_JReverseScriptingCore.h"
 #include "JythonManager.h"
 #include "JythonInterpreter.h"
+#include "StartupRule.h"
 
 
 
@@ -271,14 +272,14 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     // Perform actions when a class file is loaded
     std::cout << "Loading Class: " << name << "\n";
 
-    std::vector<std::string> toiter = PipeClientAPI::StartupPipe.ReadPipe();
+    std::vector<StartupRule> toiter = JReverseStore::ruleslist;
 
     for (int i = 0; i < toiter.size(); i++)
     {
-        if (toiter[i] == name) {
+        if (toiter[i].ClassName == name && toiter[i].IsBypass == false) {
             std::cout << "Class comparision True!" << std::endl;
 
-            std::string pre = toiter[i+1];
+            std::string pre = toiter[i].ByteCodes;
             std::vector<unsigned char> bytecode(pre.begin(), pre.end());
             
             const size_t result_size = bytecode.size() / 2;
@@ -314,6 +315,13 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
             ClassFileManager::AddClassFile(curfile);
             return;
         }
+        else
+        {
+            if (toiter[i].ClassName == name) {
+                JReverseStore::bypassRules.push_back(toiter[i]);//Add to bypass rules
+            }
+        }
+        JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
     }
 
     // Print the bytecode of the loaded class
@@ -667,6 +675,21 @@ void MainThread(HMODULE instance)
 
     ClassFileManager::init();
 
+    //Serealize all Startup Rules
+    std::vector<std::string> toiter = PipeClientAPI::StartupPipe.ReadPipe();
+
+    if (toiter.size() % 3 == 0 || toiter.size() < 3) {
+        std::cout << "Invalid Startup Rules!" << std::endl;
+    }
+    else
+    {
+        for (int i = 0; i < toiter.size(); i+=3)
+        {
+            StartupRule rule = SerializeStartupRule(toiter[i].c_str(), toiter[i + 1].c_str(), toiter[i + 2].c_str());
+            JReverseStore::ruleslist.push_back(rule);
+        }
+    }
+
     //For class file hooks
     // Set event callbacks
     jvmtiEventCallbacks callbacks;
@@ -715,6 +738,12 @@ void MainThread(HMODULE instance)
 
 
     while (true) {
+        std::vector<StartupRule> newbypassrules = JReverseStore::bypassRules;
+        for (int i = 0; newbypassrules.size() < i; i++) {
+            PipeClientAPI::FunctionArgPipe.WritePipe(std::vector<std::string>{newbypassrules[i].ClassName, newbypassrules[i].ByteCodes});
+            PipeClientAPI::FunctionPipe.WritePipe("redefineClass");
+            JReverseStore::bypassRules.erase(JReverseStore::bypassRules.begin() + i);
+        }
         while (true) {            
             if (!PipeClientAPI::isFunctionPipeNone()) {
                 std::printf("Function Call Detected!\n");

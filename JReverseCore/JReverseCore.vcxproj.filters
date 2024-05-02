@@ -37,6 +37,9 @@
     <Filter Include="Source Files\Jython">
       <UniqueIdentifier>{a000b7d9-b7b1-4e85-a8d0-2316501bf461}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Startup">
+      <UniqueIdentifier>{ce5d0466-b658-47eb-8eb3-76abcc35ad4c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -81,6 +84,9 @@
     <ClInclude Include="JythonReturns.h">
       <Filter>Header Files\Jython</Filter>
     </ClInclude>
+    <ClInclude Include="StartupRule.h">
+      <Filter>Header Files\Startup</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -107,14 +113,14 @@
     <ClCompile Include="com_jreverse_jreverse_Core_JReverseScriptingCore.cpp">
       <Filter>Source Files\jni</Filter>
     </ClCompile>
-    <ClCompile Include="datastore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="JythonInterpreter.cpp">
       <Filter>Source Files\Jython</Filter>
     </ClCompile>
     <ClCompile Include="JythonManager.cpp">
       <Filter>Source Files\Jython</Filter>
+    </ClCompile>
+    <ClCompile Include="datastore.cpp">
+      <Filter>Source Files\jni</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
