@@ -144,6 +144,9 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     jfieldID RuleIsBypassID = env->GetFieldID(RuleClass, "isBypass", "Z");
     jsize ArraySize = env->GetArrayLength(rulesArray);
 
+    JReverseLogger logger = JReverseLogger(env);
+    logger.Log("Got Field ID's");
+
     std::vector<std::string> retunable = std::vector<std::string>{"NO ARGS"};
 
     if (ArraySize < 1) {
@@ -152,6 +155,8 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     }
 
     retunable.clear();
+
+    logger.Log("Getting Field Values for startup");
 
     for (int i = 0; i < ArraySize; i++) {
         jobject element = env->GetObjectArrayElement(rulesArray, i);

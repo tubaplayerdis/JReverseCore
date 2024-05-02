@@ -270,7 +270,7 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     }
 
     // Perform actions when a class file is loaded
-    std::cout << "Loading Class: " << name << "\n";
+    std::cout << "Loading Class: " << name << std::endl;
 
     std::vector<StartupRule> toiter = JReverseStore::ruleslist;
 
@@ -306,8 +306,6 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
             *new_class_data = new unsigned char[result_size];
             memcpy(*new_class_data, result, result_size);
 
-            system("pause");
-
             std::cout << "MODIFIED CLASS: " << name << std::endl;           
             ClassFile curfile;
             curfile.bytecodes = pre;
@@ -319,6 +317,7 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
         {
             if (toiter[i].ClassName == name) {
                 JReverseStore::bypassRules.push_back(toiter[i]);//Add to bypass rules
+                std::cout << "Bypass Rule Detected!" << std::endl;
             }
         }
         JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
@@ -574,13 +573,13 @@ void MainThread(HMODULE instance)
 
 
     using jniGetCreatedJavaVMs_t = jint(*)(JavaVM** vmBuf, jsize bufLen, jsize* nVMs);
-   
+
 
     /*
     PipeManager::SetupClient();
     std::printf(PipeManager::ReadString().c_str());
     std::printf("\n");
-    
+
     PipeManager::WriteString("Testing Shared Memory Pipeline! - From Injected Application");
     */
 
@@ -596,7 +595,7 @@ void MainThread(HMODULE instance)
             break;
         }
     }
-    
+
 
     const auto jniGetCreatedJavaVMs = reinterpret_cast<jniGetCreatedJavaVMs_t>(GetProcAddress(
         jvmHandle, "JNI_GetCreatedJavaVMs"));
@@ -644,7 +643,7 @@ void MainThread(HMODULE instance)
             std::printf("Got the TIENV\n");
             if (res != JNI_OK)
             {
-                std::printf("[!] Error With JVMTIENV\n");                
+                std::printf("[!] Error With JVMTIENV\n");
             }
             break;
         }
@@ -680,10 +679,14 @@ void MainThread(HMODULE instance)
 
     if (toiter.size() % 3 == 0 || toiter.size() < 3) {
         std::cout << "Invalid Startup Rules!" << std::endl;
+        std::cout << "Rule Dump: " << std::endl;
+        for (std::string str : toiter) {
+            std::cout << str << std::endl;
+        }
     }
     else
     {
-        for (int i = 0; i < toiter.size(); i+=3)
+        for (int i = 0; i < toiter.size(); i += 3)
         {
             StartupRule rule = SerializeStartupRule(toiter[i].c_str(), toiter[i + 1].c_str(), toiter[i + 2].c_str());
             JReverseStore::ruleslist.push_back(rule);
@@ -738,18 +741,55 @@ void MainThread(HMODULE instance)
 
 
     while (true) {
-        std::vector<StartupRule> newbypassrules = JReverseStore::bypassRules;
-        for (int i = 0; newbypassrules.size() < i; i++) {
-            PipeClientAPI::FunctionArgPipe.WritePipe(std::vector<std::string>{newbypassrules[i].ClassName, newbypassrules[i].ByteCodes});
-            PipeClientAPI::FunctionPipe.WritePipe("redefineClass");
-            JReverseStore::bypassRules.erase(JReverseStore::bypassRules.begin() + i);
-        }
-        while (true) {            
+
+        while (true) {
             if (!PipeClientAPI::isFunctionPipeNone()) {
                 std::printf("Function Call Detected!\n");
                 break;
             }
+#pragma region BypassRuleUglyStuff
+            if (JReverseStore::bypassRules.size() > 0) {
+                std::cout << "Bypass Detected!" << std::endl;
+                for (int i = 0; i < JReverseStore::bypassRules.size(); i++) {
+                    std::cout << "Bypass Rule: " << JReverseStore::bypassRules[i].ClassName << "is being redefined" << std::endl;
+                    std::vector<std::string> args = std::vector<std::string>{ JReverseStore::bypassRules[i].ClassName, JReverseStore::bypassRules[i].ByteCodes };
+                    if (args[0].empty() || args[1].empty()) { std::printf("Invalid Bypass Rule\n"); }
+                    else {
+                        //0 = jclass, 1=bytecodes
+                        jclass respectiveclass = jniEnv->FindClass(args[0].c_str());
+
+                        std::cout << "Got Respective Class!" << std::endl;
+
+                        if (respectiveclass == nullptr) std::printf("Respective Class NULL!");
+
+                        std::string input_string = args[1];
+                        std::vector<unsigned char> bytecode(input_string.begin(), input_string.end());
+                        const size_t result_size = bytecode.size() / 2;
+                        unsigned char* result = new unsigned char[result_size];
+
+                        for (size_t i = 0; i < result_size; ++i) {
+                            std::string byte_string = input_string.substr(i * 2, 2);
+                            result[i] = static_cast<unsigned char>(std::stoi(byte_string, nullptr, 16));
+                        }
+
+                        std::cout << "Implemented Bytecodes" << std::endl;
+
+                        jvmtiClassDefinition def;
+                        def.class_bytes = result;
+                        def.class_byte_count = result_size;
+                        def.klass = respectiveclass;
+                        jvmtiError res = TIenv->RedefineClasses(1, &def);
+                        std::string callback = GetJVMTIError(res);
+                        std::cout << "Refed bypass error: " << callback << std::endl;
+
+                        delete[] result;//Prevent Memory Leaks
+                    }
+                    JReverseStore::bypassRules.erase(JReverseStore::bypassRules.begin() + i);
+                }
+            }
+#pragma endregion
             Sleep(10);
+            //Part of main loop    
         }
         std::printf("Looping Func\n");
         std::string called = PipeClientAPI::ReadFunctionPipeAR();
@@ -822,7 +862,7 @@ void MainThread(HMODULE instance)
             if (!std::filesystem::exists(args[1].c_str())) std::cout << "The Jar file does not exist!" << std::endl;
 
             //This works. Thanks Stack Overflow!
-            add_path(jniEnv,args[1]);
+            add_path(jniEnv, args[1]);
 
             std::cout << "Checking Errors" << std::endl;
             CheckJNIError(jniEnv);
@@ -971,7 +1011,7 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {"Scripting Core Class Not Initalized!"});
             }
             else
-            {                
+            {
 
                 std::cout << "Adding Loaded Class Now!" << std::endl;
                 jmethodID addMethod = jniEnv->GetStaticMethodID(ScriptingCore, "AddClass", "(Ljava/lang/String;)Ljava/lang/String;");
@@ -1029,10 +1069,10 @@ void MainThread(HMODULE instance)
                     }
                     std::cout << "Returned Values" << std::endl;
                 }
-                
-                
+
+
             }
-            
+
         }
         else if (called == "getStringWriterData") {
             jstring returnable = (jstring)jniEnv->CallObjectMethod(stringWriterObj, toStringMethod);
@@ -1079,14 +1119,12 @@ void MainThread(HMODULE instance)
 
                 delete[] result;//Prevent Memory Leaks
             }
-            
+
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
         }
     }
-    
-
 }
 
 bool __stdcall DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)

@@ -7,7 +7,7 @@ struct StartupRule
 	bool IsBypass;
 };
 
-StartupRule SerializeStartupRule(const char* name, const char* bytecodes, const char* isbypass) {
+inline StartupRule SerializeStartupRule(const char* name, const char* bytecodes, const char* isbypass) {
 	StartupRule returnable;
 	returnable.ClassName = name;
 	returnable.ByteCodes = bytecodes;
