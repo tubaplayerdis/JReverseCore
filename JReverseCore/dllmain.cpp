@@ -677,7 +677,7 @@ void MainThread(HMODULE instance)
     //Serealize all Startup Rules
     std::vector<std::string> toiter = PipeClientAPI::StartupPipe.ReadPipe();
 
-    if (toiter.size() % 3 == 0 || toiter.size() < 3) {
+    if (toiter.size() % 3 != 0 || toiter.size() < 3) {
         std::cout << "Invalid Startup Rules!" << std::endl;
         std::cout << "Rule Dump: " << std::endl;
         for (std::string str : toiter) {
@@ -686,6 +686,7 @@ void MainThread(HMODULE instance)
     }
     else
     {
+        std::cout << "Valid Rules!" << std::endl;
         for (int i = 0; i < toiter.size(); i += 3)
         {
             StartupRule rule = SerializeStartupRule(toiter[i].c_str(), toiter[i + 1].c_str(), toiter[i + 2].c_str());
