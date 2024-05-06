@@ -274,8 +274,11 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
 
     std::vector<StartupRule> toiter = JReverseStore::ruleslist;
 
+    std::cout << "toiter size: " << toiter.size() << std::endl;
+
     for (int i = 0; i < toiter.size(); i++)
     {
+        std::cout << "Checking class for comparison: " << toiter[i].ClassName << std::endl;
         if (toiter[i].ClassName == name && toiter[i].IsBypass == false) {
             std::cout << "Class comparision True!" << std::endl;
 
@@ -311,6 +314,8 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
             curfile.bytecodes = pre;
             curfile.classname = name;
             ClassFileManager::AddClassFile(curfile);
+
+            JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
             return;
         }
         else
@@ -318,9 +323,10 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
             if (toiter[i].ClassName == name) {
                 JReverseStore::bypassRules.push_back(toiter[i]);//Add to bypass rules
                 std::cout << "Bypass Rule Detected!" << std::endl;
+                JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
             }
         }
-        JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
+        
     }
 
     // Print the bytecode of the loaded class

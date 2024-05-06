@@ -45,7 +45,7 @@ extern "C" {
 	 * Signature: ([Lcom/jreverse/jreverse/StartupRule;)I
 	 */
 	JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStartupPipe
-	(JNIEnv*, jclass, jobjectArray);
+	(JNIEnv*, jclass, jobjectArray, jobject);
 
 	/*
 	 * Class:     com_jreverse_jreverse_Bridge_JReverseBridge

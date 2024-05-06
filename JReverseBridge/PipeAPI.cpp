@@ -13,6 +13,7 @@ JReversePipe<std::vector<std::string>> PipeAPI::FunctionArgPipe = JReversePipe<s
 JReversePipe<std::vector<std::string>> PipeAPI::ReturnPipe = JReversePipe<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write, 500000);
 JReversePipe<std::vector<std::string>> PipeAPI::PipeNamePipe = JReversePipe<std::vector<std::string>>("CriticalPipeNamePipe", boost::interprocess::read_write, 1000);
 JReversePipe<std::vector<std::string>> PipeAPI::StartupRulesPipe = JReversePipe<std::vector<std::string>>("CriticalStartupPipe", boost::interprocess::read_write, 50000);
+JReversePipe<std::vector<std::string>> PipeAPI::SettingsPipe = JReversePipe<std::vector<std::string>>("CriticalSettingsPipe", boost::interprocess::read_write, 50000);
 JReversePipe<std::string> PipeAPI::CommunicationPipe = JReversePipe<std::string>("CriticalCommunicationPipe", boost::interprocess::read_write, 1000);
 
 

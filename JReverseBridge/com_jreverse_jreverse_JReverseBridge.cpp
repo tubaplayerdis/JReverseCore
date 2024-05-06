@@ -136,7 +136,7 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InjectDL
     else { return (jint)0; }
 }
 
-JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStartupPipe(JNIEnv* env, jclass, jobjectArray rulesArray)
+JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStartupPipe(JNIEnv* env, jclass, jobjectArray rulesArray, jobject settings)
 {
     jclass RuleClass = env->FindClass("com/jreverse/jreverse/StartupRule");
     jfieldID RuleNameID = env->GetFieldID(RuleClass, "ClassName", "Ljava/lang/String;");
@@ -173,6 +173,28 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     }
 
     PipeAPI::StartupRulesPipe.WritePipe(retunable);
+
+    logger.Log("Wrote Startup Rules!");
+
+    jclass StartupSettingsClass = env->FindClass("com/jreverse/jreverse/StartupSettings");
+    //Auto start and inject is ignored as it is not neccecary
+    jfieldID IsClassFileLoadMessagesField = env->GetFieldID(StartupSettingsClass, "IsClassFileLoadMessages", "Z");
+    jfieldID IsClassFileCollectionField = env->GetFieldID(StartupSettingsClass, "IsClassFileCollection", "Z");
+    jfieldID IsConsoleWindowField = env->GetFieldID(StartupSettingsClass, "IsConsoleWindow", "Z");
+    jfieldID FuncLoopTimeoutField = env->GetFieldID(StartupSettingsClass, "FuncLoopTimeout", "I");
+    jfieldID JNIEnvTimeoutField = env->GetFieldID(StartupSettingsClass, "JNIEnvTimeout", "I");
+
+    //Instacne vars due to IPC problems
+    std::string IsClassFileCollection = std::to_string(env->GetBooleanField(settings, IsClassFileCollectionField));
+    std::string IsClassFileLoadMessages = std::to_string(env->GetBooleanField(settings, IsClassFileLoadMessagesField));
+    std::string IsConsoleWindow = std::to_string(env->GetBooleanField(settings, IsConsoleWindowField));
+    std::string FuncLoopTimeout = std::to_string(env->GetIntField(settings, FuncLoopTimeoutField));
+    std::string JNIEnvTimeout = std::to_string(env->GetIntField(settings, JNIEnvTimeoutField));
+
+    PipeAPI::SettingsPipe.WritePipe(std::vector<std::string>{IsClassFileCollection, IsClassFileLoadMessages, IsConsoleWindow, FuncLoopTimeout, JNIEnvTimeout});
+
+    logger.Log("Wrote Settings to Pipe!");
+
     return 0;
 }
 
