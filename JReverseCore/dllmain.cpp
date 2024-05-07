@@ -253,24 +253,24 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     //Verify Data
     if (class_data_len <= 0 || class_data == nullptr) {
         // Invalid arguments, log an error and return
-        std::cout << "Invalid Class, Abandoning" << std::endl;
+        //std::cout << "Invalid Class, Abandoning" << std::endl;
         return;
     }
 
     if (class_being_redefined == nullptr) {
-        std::cout << "New Class Load" << std::endl;
+        //std::cout << "New Class Load" << std::endl;
     }
     else {
-       std::cout << "Class Redefenition" << std::endl;
+       //std::cout << "Class Redefenition" << std::endl;
     }
 
     if (name == nullptr) {
-        std::cout << "Name is NULL. Sending to Unresolved" << std::endl;
+        //std::cout << "Name is NULL. Sending to Unresolved" << std::endl;
         name = "unknown";
     }
 
     // Perform actions when a class file is loaded
-    std::cout << "Loading Class: " << name << std::endl;
+    //std::cout << "Loading Class: " << name << std::endl;
 
     for (int i = 0; i < JReverseStore::ruleslist.size(); i++)
     {
@@ -600,7 +600,7 @@ void MainThread(HMODULE instance)
     }
 
     JNIEnv* jniEnv = nullptr;
-    Sleep(10);
+    Sleep(100);
     while (true)
     {
         if (javaVm->AttachCurrentThread(reinterpret_cast<void**>(&jniEnv), nullptr) != JNI_OK) {
@@ -696,10 +696,6 @@ void MainThread(HMODULE instance)
         return;
     }
 
-
-
-
-
     std::printf("Enabeld Class file load hooks\n");
 
     JReverseStore::jvmtienv = TIenv;
@@ -711,19 +707,21 @@ void MainThread(HMODULE instance)
 
     //PipeClientAPI::PrintPipes();
     std::cout << "TO init Function Call Loop: " << std::endl;
-    Sleep(2000);
+    Sleep(10);
 
-    std::printf("Starting Function Call Loop\n");
+    
 
     //Create Scripting StringWriter!
-    jclass stringWriterClass = jniEnv->FindClass("java/io/StringWriter");
-    jmethodID StringWriterconstructor = jniEnv->GetMethodID(stringWriterClass, "<init>", "()V");
-    jmethodID toStringMethod = jniEnv->GetMethodID(stringWriterClass, "toString", "()Ljava/lang/String;");
-    jmethodID closeWriterMethod = jniEnv->GetMethodID(stringWriterClass, "close", "()V");
-    jmethodID flushWriterMethod = jniEnv->GetMethodID(stringWriterClass, "flush", "()V");
-    jmethodID writeWriterMethod = jniEnv->GetMethodID(stringWriterClass, "write", "(Ljava/lang/String;)V");
-    jobject stringWriterObj = jniEnv->NewObject(stringWriterClass, StringWriterconstructor);
+    jclass stringWriterClass = nullptr;
+    jmethodID StringWriterconstructor = nullptr;
+    jmethodID toStringMethod = nullptr;
+    jmethodID closeWriterMethod = nullptr;
+    jmethodID flushWriterMethod = nullptr;
+    jmethodID writeWriterMethod = nullptr;
+    jobject stringWriterObj = nullptr;
 
+
+    std::printf("Starting Function Call Loop\n");
 
     while (true) {
 
@@ -841,8 +839,17 @@ void MainThread(HMODULE instance)
             PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetClassFileNames());
         }
         else if (called == "setupScriptingEnviroment") {
+            //Init writers and stuff etc
+            stringWriterClass = jniEnv->FindClass("java/io/StringWriter");
+            StringWriterconstructor = jniEnv->GetMethodID(stringWriterClass, "<init>", "()V");
+            toStringMethod = jniEnv->GetMethodID(stringWriterClass, "toString", "()Ljava/lang/String;");
+            closeWriterMethod = jniEnv->GetMethodID(stringWriterClass, "close", "()V");
+            flushWriterMethod = jniEnv->GetMethodID(stringWriterClass, "flush", "()V");
+            writeWriterMethod = jniEnv->GetMethodID(stringWriterClass, "write", "(Ljava/lang/String;)V");
+            stringWriterObj = jniEnv->NewObject(stringWriterClass, StringWriterconstructor);
+
             //Seutp python
-            std::cout << "Seting up python!" << std::endl;
+            std::cout << "Seting up Jython!" << std::endl;
 
             if (!std::filesystem::exists(args[1].c_str())) std::cout << "The Jar file does not exist!" << std::endl;
 
