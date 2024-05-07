@@ -272,61 +272,39 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     // Perform actions when a class file is loaded
     std::cout << "Loading Class: " << name << std::endl;
 
-    std::vector<StartupRule> toiter = JReverseStore::ruleslist;
-
-    std::cout << "toiter size: " << toiter.size() << std::endl;
-
-    for (int i = 0; i < toiter.size(); i++)
+    for (int i = 0; i < JReverseStore::ruleslist.size(); i++)
     {
-        std::cout << "Checking class for comparison: " << toiter[i].ClassName << std::endl;
-        if (toiter[i].ClassName == name && toiter[i].IsBypass == false) {
-            std::cout << "Class comparision True!" << std::endl;
+        if (strcmp(JReverseStore::ruleslist[i].ClassName, name)) {
+            if (!JReverseStore::ruleslist[i].IsBypass) {
 
-            std::string pre = toiter[i].ByteCodes;
-            std::vector<unsigned char> bytecode(pre.begin(), pre.end());
-            
-            const size_t result_size = bytecode.size() / 2;
-            unsigned char* result = new unsigned char[result_size];
+                std::string pre = JReverseStore::ruleslist[i].ByteCodes;
+                std::vector<unsigned char> bytecode(pre.begin(), pre.end());
 
-            for (size_t i = 0; i < result_size; ++i) {
-                std::string byte_string = pre.substr(i* 2, 2);
-                result[i] = static_cast<unsigned char>(std::stoi(byte_string, nullptr, 16));
-            }
+                const size_t result_size = bytecode.size() / 2;
+                unsigned char* result = new unsigned char[result_size];
 
-            std::cout << "New Data Len: " << result_size << std::endl;
-            std::cout << "Old Data Len: " << class_data_len << std::endl;
-            
+                for (size_t i = 0; i < result_size; ++i) {
+                    std::string byte_string = pre.substr(i * 2, 2);
+                    result[i] = static_cast<unsigned char>(std::stoi(byte_string, nullptr, 16));
+                }
 
-            std::cout << "Original Bytecode: " << std::endl;
-            std::cout << class_data << std::endl;
-            std::cout << "\n\n\n\n";
+                *new_class_data_len = result_size;
+                *new_class_data = new unsigned char[result_size];
+                memcpy(*new_class_data, result, result_size);
 
-            std::cout << "To be modded bytecode: " << std::endl;
-            std::cout << result << std::endl;
-            std::cout << "\n\n\n\n";
+                std::cout << "Modified class by rule: " << name << std::endl;
+                ClassFile curfile;
+                curfile.bytecodes = pre;
+                curfile.classname = name;
+                ClassFileManager::AddClassFile(curfile);
 
-            *new_class_data_len = result_size;
-            *new_class_data = new unsigned char[result_size];
-            memcpy(*new_class_data, result, result_size);
-
-            std::cout << "MODIFIED CLASS: " << name << std::endl;           
-            ClassFile curfile;
-            curfile.bytecodes = pre;
-            curfile.classname = name;
-            ClassFileManager::AddClassFile(curfile);
-
-            JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
-            return;
-        }
-        else
-        {
-            if (toiter[i].ClassName == name) {
-                JReverseStore::bypassRules.push_back(toiter[i]);//Add to bypass rules
-                std::cout << "Bypass Rule Detected!" << std::endl;
                 JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
+                return;
             }
-        }
-        
+            JReverseStore::bypassRules.push_back(JReverseStore::ruleslist[i]);//Add to bypass rules
+            std::cout << "Bypass Rule Detected!" << std::endl;
+            JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
+        } 
     }
 
     // Print the bytecode of the loaded class

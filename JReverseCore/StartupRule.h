@@ -11,6 +11,6 @@ inline StartupRule SerializeStartupRule(const char* name, const char* bytecodes,
 	StartupRule returnable;
 	returnable.ClassName = name;
 	returnable.ByteCodes = bytecodes;
-	if (isbypass == "true") returnable.IsBypass = true; else returnable.IsBypass = false;
+	if (strcmp(isbypass, "true") == 0) returnable.IsBypass = true; else returnable.IsBypass = false;
 	return returnable;
 }
