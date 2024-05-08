@@ -1,12 +1,2 @@
 NOTE: If the Bridge DLL is Updated, it has to be copied to the jreverse folder(more like replaces) for updates to work becuase it uses that dll: C:\Users\aaron\IdeaProjects\jreverse
-
-IDEAS:
-Add ability to load class files and jar files into the injected jvm via the UI. This is already implemented just need to link it with the UI
-add method to jython embed to allow the return of instanced java classes
-Scripting Documentation can be in plain html
-
-TODO:
-
-impl ideas #1 and #2. 
-
-Impl Dynamic Reallocation of JReversePipe's
+Look at JReverse TODO.txt
