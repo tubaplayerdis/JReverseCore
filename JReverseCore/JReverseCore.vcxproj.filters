@@ -40,6 +40,9 @@
     <Filter Include="Header Files\Startup">
       <UniqueIdentifier>{ce5d0466-b658-47eb-8eb3-76abcc35ad4c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Startup">
+      <UniqueIdentifier>{0b61f269-2535-461d-b3d7-5716316e83b0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -87,6 +90,9 @@
     <ClInclude Include="StartupRule.h">
       <Filter>Header Files\Startup</Filter>
     </ClInclude>
+    <ClInclude Include="JReverseSettings.h">
+      <Filter>Header Files\Startup</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -121,6 +127,9 @@
     </ClCompile>
     <ClCompile Include="datastore.cpp">
       <Filter>Source Files\jni</Filter>
+    </ClCompile>
+    <ClCompile Include="JReverseSettings.cpp">
+      <Filter>Source Files\Startup</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

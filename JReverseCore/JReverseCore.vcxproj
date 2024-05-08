@@ -155,6 +155,7 @@
     <ClInclude Include="JReversePipeClient.h" />
     <ClInclude Include="JReversePipeHelper.h" />
     <ClInclude Include="JReversePipeInfo.h" />
+    <ClInclude Include="JReverseSettings.h" />
     <ClInclude Include="JythonInterpreter.h" />
     <ClInclude Include="JythonManager.h" />
     <ClInclude Include="JythonReturns.h" />
@@ -170,6 +171,7 @@
     <ClCompile Include="datastore.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="JReversePipeHelper.cpp" />
+    <ClCompile Include="JReverseSettings.cpp" />
     <ClCompile Include="JythonInterpreter.cpp" />
     <ClCompile Include="JythonManager.cpp" />
     <ClCompile Include="pch.cpp">

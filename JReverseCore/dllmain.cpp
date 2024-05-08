@@ -599,6 +599,10 @@ void MainThread(HMODULE instance)
         }
     }
 
+    //Do settings here
+    
+
+
     JNIEnv* jniEnv = nullptr;
     Sleep(100);
     while (true)
