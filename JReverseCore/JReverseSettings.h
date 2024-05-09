@@ -1,6 +1,7 @@
 #pragma once
 
-class JReverseStartupSettings {
+class JReverseStartupSettings
+{
 public:
 	static void InitSettings();
 	static bool isClassFileLoadMessages;
@@ -9,4 +10,4 @@ public:
 	static int funcLoopTimeout;
 	static int JNIEnvTiemout;
 
-}
+};

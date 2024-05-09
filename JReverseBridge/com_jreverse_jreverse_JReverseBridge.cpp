@@ -149,32 +149,36 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
 
     std::vector<std::string> retunable = std::vector<std::string>{"NO ARGS"};
 
+    bool DoRules = true;
+
     if (ArraySize < 1) {
         PipeAPI::StartupRulesPipe.WritePipe(retunable);
-        return 1;
+        DoRules = false;
+        logger.Log("Ingoring Rules!");
     }
 
     retunable.clear();
 
-    logger.Log("Getting Field Values for startup");
+    if (DoRules) {
+        logger.Log("Getting Field Values for startup");
+        for (int i = 0; i < ArraySize; i++) {
+            jobject element = env->GetObjectArrayElement(rulesArray, i);
+            jstring jrulename = (jstring)env->GetObjectField(element, RuleNameID);
+            jstring jrulebytecodes = (jstring)env->GetObjectField(element, RuleBytecodesID);
+            jboolean jruleisbypass = env->GetBooleanField(element, RuleIsBypassID);
+            std::string rulename = env->GetStringUTFChars(jrulename, NULL);
+            std::string rulebytecodes = env->GetStringUTFChars(jrulebytecodes, NULL);
+            std::string ruleisbypass = "false";
+            if ((bool)jruleisbypass) ruleisbypass = "true";
+            retunable.push_back(rulename);
+            retunable.push_back(rulebytecodes);
+            retunable.push_back(ruleisbypass);
+        }
 
-    for (int i = 0; i < ArraySize; i++) {
-        jobject element = env->GetObjectArrayElement(rulesArray, i);
-        jstring jrulename = (jstring)env->GetObjectField(element, RuleNameID);
-        jstring jrulebytecodes = (jstring)env->GetObjectField(element, RuleBytecodesID);
-        jboolean jruleisbypass = env->GetBooleanField(element, RuleIsBypassID);
-        std::string rulename = env->GetStringUTFChars(jrulename, NULL);
-        std::string rulebytecodes = env->GetStringUTFChars(jrulebytecodes, NULL);
-        std::string ruleisbypass = "false";
-        if ((bool)jruleisbypass) ruleisbypass = "true";
-        retunable.push_back(rulename);
-        retunable.push_back(rulebytecodes);
-        retunable.push_back(ruleisbypass);
+        PipeAPI::StartupRulesPipe.WritePipe(retunable);
+
+        logger.Log("Wrote Startup Rules!");
     }
-
-    PipeAPI::StartupRulesPipe.WritePipe(retunable);
-
-    logger.Log("Wrote Startup Rules!");
 
     jclass StartupSettingsClass = env->FindClass("com/jreverse/jreverse/StartupSettings");
     //Auto start and inject is ignored as it is not neccecary
@@ -190,6 +194,13 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     std::string IsConsoleWindow = std::to_string(env->GetBooleanField(settings, IsConsoleWindowField));
     std::string FuncLoopTimeout = std::to_string(env->GetIntField(settings, FuncLoopTimeoutField));
     std::string JNIEnvTimeout = std::to_string(env->GetIntField(settings, JNIEnvTimeoutField));
+
+    logger.Log("Startup Settings Being Sent:");
+    logger.Log(IsClassFileCollection);
+    logger.Log(IsClassFileLoadMessages);
+    logger.Log(IsConsoleWindow);
+    logger.Log(FuncLoopTimeout);
+    logger.Log(JNIEnvTimeout);
 
     PipeAPI::SettingsPipe.WritePipe(std::vector<std::string>{IsClassFileCollection, IsClassFileLoadMessages, IsConsoleWindow, FuncLoopTimeout, JNIEnvTimeout});
 

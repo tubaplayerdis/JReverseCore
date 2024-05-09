@@ -24,6 +24,7 @@
 #include "JythonManager.h"
 #include "JythonInterpreter.h"
 #include "StartupRule.h"
+#include "JReverseSettings.h"
 
 
 
@@ -253,24 +254,24 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     //Verify Data
     if (class_data_len <= 0 || class_data == nullptr) {
         // Invalid arguments, log an error and return
-        //std::cout << "Invalid Class, Abandoning" << std::endl;
+        if(JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Invalid Class, Abandoning" << std::endl;
         return;
     }
 
     if (class_being_redefined == nullptr) {
-        //std::cout << "New Class Load" << std::endl;
+        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "New Class Load" << std::endl;
     }
     else {
-       //std::cout << "Class Redefenition" << std::endl;
+        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Class Redefenition" << std::endl;
     }
 
     if (name == nullptr) {
-        //std::cout << "Name is NULL. Sending to Unresolved" << std::endl;
+        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Name is NULL. Sending to Unresolved" << std::endl;
         name = "unknown";
     }
 
     // Perform actions when a class file is loaded
-    //std::cout << "Loading Class: " << name << std::endl;
+    if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Loading Class: " << name << std::endl;
 
     for (int i = 0; i < JReverseStore::ruleslist.size(); i++)
     {
@@ -292,7 +293,7 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
                 *new_class_data = new unsigned char[result_size];
                 memcpy(*new_class_data, result, result_size);
 
-                std::cout << "Modified class by rule: " << name << std::endl;
+                if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Modified class by rule: " << name << std::endl;
                 ClassFile curfile;
                 curfile.bytecodes = pre;
                 curfile.classname = name;
@@ -302,7 +303,7 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
                 return;
             }
             JReverseStore::bypassRules.push_back(JReverseStore::ruleslist[i]);//Add to bypass rules
-            std::cout << "Bypass Rule Detected!" << std::endl;
+            if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Bypass Rule Detected!" << std::endl;
             JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
         } 
     }
@@ -600,11 +601,13 @@ void MainThread(HMODULE instance)
     }
 
     //Do settings here
-    
+    JReverseStartupSettings::InitSettings();
+
+    std::cout << "Got Settings!" << std::endl;
 
 
     JNIEnv* jniEnv = nullptr;
-    Sleep(100);
+    Sleep(JReverseStartupSettings::JNIEnvTiemout);
     while (true)
     {
         if (javaVm->AttachCurrentThread(reinterpret_cast<void**>(&jniEnv), nullptr) != JNI_OK) {
@@ -711,7 +714,7 @@ void MainThread(HMODULE instance)
 
     //PipeClientAPI::PrintPipes();
     std::cout << "TO init Function Call Loop: " << std::endl;
-    Sleep(10);
+    Sleep(JReverseStartupSettings::funcLoopTimeout);
 
     
 

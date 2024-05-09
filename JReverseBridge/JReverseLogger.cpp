@@ -19,6 +19,7 @@ void JReverseLogger::Log(std::string message)
 
 void JReverseLogger::RemoveAndLog(std::string message)
 {
+	message = "NATIVE: " + message;
 	Env->CallStaticVoidMethod(LoggerClass, RemLoggingID, Env->NewStringUTF(message.c_str()));
 }
 
