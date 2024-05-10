@@ -249,7 +249,8 @@ std::vector<unsigned char> readClassFile(const char* filename) {
 
 
 void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass class_being_redefined, jobject loader, const char* name, jobject protection_domain, jint class_data_len, const unsigned char* class_data, jint* new_class_data_len, unsigned char** new_class_data) {
-        
+    //Check if neccacary.
+    if (!JReverseStartupSettings::isClassFileCollection) return;
 
     //Verify Data
     if (class_data_len <= 0 || class_data == nullptr) {
@@ -602,6 +603,7 @@ void MainThread(HMODULE instance)
 
     //Do settings here
     JReverseStartupSettings::InitSettings();
+    if (!JReverseStartupSettings::isConsoleWindow) FreeConsole();
 
     std::cout << "Got Settings!" << std::endl;
 
@@ -1117,6 +1119,7 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{callback});
 
                 delete[] result;//Prevent Memory Leaks
+
             }
 
         }
