@@ -38,6 +38,10 @@ void printBool(bool Bool) {
     }
 }
 
+const char* btoi(bool Bool) {
+    if (Bool) return "true"; else return "false";
+}
+
 const char* CheckJNIError(JNIEnv* jniEnv) {
     jthrowable ex = nullptr;
     if (jniEnv->ExceptionCheck()) { std::cout << "A JVM EXEPTION WAS FOUND!" << std::endl; ex = jniEnv->ExceptionOccurred(); }
@@ -214,6 +218,50 @@ bool CheckAndPrintError(jvmtiError error)
     {
         std::printf("NO ERROR");
         return false;
+    }
+}
+
+const char* GetAccessFlagAsString(int flag) {
+    switch (flag)
+    {
+        case 0x0001:
+            return "ACC_PUBLIC";
+        case 0x0010:
+            return "ACC_FINAL";
+        case 0x0020:
+            return "ACC_SUPER";
+        case 0x0200:
+            return "ACC_INTERFACE";
+        case 0x0400:
+            return "ACC_ABSTRACT";
+        case 0x1000:
+            return "ACC_SYNTHETIC";
+        case 0x2000:
+            return "ACC_ANNOTATION";
+        case 0x4000:
+            return "ACC_ENUM";
+        default:
+            return "Invalid Flag!";
+    }
+}
+
+const char* GetStatusIntAsString(int status) {
+    switch (status)
+    {
+        case 1:
+            return "CLASS_STATUS_VERIFIED";
+        case 2:
+            return "CLASS_STATUS_PREPARED";
+        case 4:
+            return "CLASS_STATUS_INITIALIZED";
+        case 8:
+            return "CLASS_STATUS_ERROR";
+        case 16:
+            return "CLASS_STATUS_ARRAY";
+        case 32:
+            return "CLASS_STATUS_PRIMITIVE";
+        default:
+            return "Invalid Status Int!";
     }
 }
 
@@ -828,6 +876,64 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string> {found.classname, found.bytecodes});
             }
         }
+        else if (called == "getClassExtraData") {
+            std::cout << "Gettings Class Data on: " << args[0] << std::endl;
+
+            if (args[0].empty()) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Args Empty"});
+                continue;
+            }
+            jclass clazz = jniEnv->FindClass(args[0].c_str());
+            if (clazz == nullptr) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Class Not Found"});
+                continue;
+            }
+            jvmtiError curer;
+
+            //IsInterface
+            jboolean isinterbool;
+            curer = TIenv->IsInterface(clazz, &isinterbool);
+            std::cout << "GetEx0: " << GetJVMTIError(curer) << std::endl;
+
+            //Version
+            jint major;
+            jint minor;
+            TIenv->GetClassVersionNumbers(clazz, &major, &minor);
+            std::cout << "GetEx1: " << GetJVMTIError(curer) << std::endl;
+
+            //IsModifyable
+            jboolean ismodbool;
+            curer = TIenv->IsModifiableClass(clazz, &ismodbool);
+            std::cout << "GetEx2: " << GetJVMTIError(curer) << std::endl;
+
+            //IsArray
+            jboolean isarrbool;
+            curer = TIenv->IsArrayClass(clazz, &isarrbool);
+            std::cout << "GetEx3: " << GetJVMTIError(curer) << std::endl;
+
+            //Acsess Flags
+            jint flagsint;
+            curer = TIenv->GetClassModifiers(clazz, &flagsint);
+            std::cout << "GetEx4: " << GetJVMTIError(curer) << std::endl;
+
+            //Status
+            jint statusint;
+            curer = TIenv->GetClassStatus(clazz, &statusint);
+            std::cout << "GetEx5: " << GetJVMTIError(curer) << std::endl;
+
+            std::vector<std::string> retrunable = { btoi(isinterbool), std::to_string(major) + "." + std::to_string(minor), btoi(ismodbool), btoi(isarrbool), GetAccessFlagAsString((int)flagsint), GetStatusIntAsString((int)statusint)};
+
+
+            /*
+            * IsInterface
+            * Version
+            * IsModifyable
+            * IsArrayClass
+            * Access Flags - https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html
+            * Status Int - https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html#GetClassStatus
+            */
+            PipeClientAPI::ReturnPipe.WritePipe(retrunable);
+        }
         else if (called == "getUnknownClassFiles") {
             PipeClientAPI::ReturnPipe.WritePipe(ClassFileManager::GetUnknownClassFiles());
         }
@@ -1119,9 +1225,22 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{callback});
 
                 delete[] result;//Prevent Memory Leaks
-
             }
 
+        }
+        else if (called == "retransformClass") {
+            if (args[0].empty()) {
+                std::cout << "Args Empty on retransform" << std::endl;
+            }
+            else
+            {
+                jclass toredef = jniEnv->FindClass(args[0].c_str());
+                const jclass* pointers = { &toredef };
+                if (toredef != nullptr) {
+                    const char* returnable = GetJVMTIError(TIenv->RetransformClasses(1, pointers));
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Retransform Classes Callback: ", returnable});
+                }
+            }
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
