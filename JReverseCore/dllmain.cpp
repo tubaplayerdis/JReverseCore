@@ -241,7 +241,9 @@ const char* GetAccessFlagAsString(int flag) {
         case 0x4000:
             return "ACC_ENUM";
         default:
-            return "Invalid Flag!";
+            std::string retu = "Invalid Flag Int: " + std::to_string(flag);
+            const char* ret = retu.c_str();
+            return ret;
     }
 }
 
@@ -261,7 +263,9 @@ const char* GetStatusIntAsString(int status) {
         case 32:
             return "CLASS_STATUS_PRIMITIVE";
         default:
-            return "Invalid Status Int!";
+            std::string retu = "Invalid Status Int: " + std::to_string(status);
+            const char* ret = retu.c_str();
+            return ret;
     }
 }
 
