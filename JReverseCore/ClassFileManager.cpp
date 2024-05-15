@@ -19,11 +19,21 @@ JNIEnv* jniEnv = nullptr;
 
 ClassFile ClassFileManager::FindClassFile(std::string name)
 {
-    std::cout << "Searching for: " << name << std::endl;
-    for (ClassFile clafil : ClassFileManager::ClassFilesList) {
+    std::cout << "Searching for class file: " << name << std::endl;
+    for (ClassFile clafil : ClassFileManager::ClassFilesList) 
+    {
         if (clafil.classname == name) return clafil;
     }
     return ClassFile{ "NOT FOUND", "NOT FOUND" };
+}
+
+int ClassFileManager::FindClassFileIndex(std::string name)
+{
+    for (int i = 0; i < ClassFileManager::ClassFilesList.size(); i++) 
+    {
+        if (ClassFileManager::ClassFilesList[i].classname == name) return i;
+    }
+    return -1;
 }
 
 void ClassFileManager::init()
@@ -33,7 +43,13 @@ void ClassFileManager::init()
 
 void ClassFileManager::AddClassFile(ClassFile classfile)
 {
+    int index = ClassFileManager::FindClassFileIndex(classfile.classname);
     std::lock_guard<std::mutex> lock(mtx);
+    if (index != -1) //Class File Exists, so overwrite 
+    {
+        ClassFileManager::ClassFilesList[index] = classfile;
+        return;
+    }
     ClassFileManager::ClassFilesList.push_back(classfile);
 }
 
