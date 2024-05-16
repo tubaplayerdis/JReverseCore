@@ -221,52 +221,56 @@ bool CheckAndPrintError(jvmtiError error)
     }
 }
 
-const char* GetAccessFlagAsString(int flag) {
-    switch (flag)
-    {
-        case 0x0001:
-            return "ACC_PUBLIC";
-        case 0x0010:
-            return "ACC_FINAL";
-        case 0x0020:
-            return "ACC_SUPER";
-        case 0x0200:
-            return "ACC_INTERFACE";
-        case 0x0400:
-            return "ACC_ABSTRACT";
-        case 0x1000:
-            return "ACC_SYNTHETIC";
-        case 0x2000:
-            return "ACC_ANNOTATION";
-        case 0x4000:
-            return "ACC_ENUM";
-        default:
-            std::string retu = "Invalid Flag Int: " + std::to_string(flag);
-            const char* ret = retu.c_str();
-            return ret;
+std::string GetAccessFlagAsString(int flag) {
+    std::stringstream stream;
+    if (flag & 0x0001) {
+        stream << "|ACC_PUBLIC|";
     }
+    if (flag & 0x0010) {
+        stream << "|ACC_FINAL|";
+    }
+    if (flag & 0x0020) {
+        stream << "|ACC_SUPER|";
+    }
+    if (flag & 0x0200) {
+        stream << "|ACC_INTERFACE|";
+    }
+    if (flag & 0x0400) {
+        stream << "|ACC_ABSTRACT|";
+    }
+    if (flag & 0x1000) {
+        stream << "|ACC_SYNTHETIC|";
+    }
+    if (flag & 0x2000) {
+        stream << "|ACC_ANNOTATION|";
+    }
+    if (flag & 0x4000) {
+        stream << "|ACC_ENUM|";
+    }
+    return stream.str();
 }
 
-const char* GetStatusIntAsString(int status) {
-    switch (status)
-    {
-        case 1:
-            return "CLASS_STATUS_VERIFIED";
-        case 2:
-            return "CLASS_STATUS_PREPARED";
-        case 4:
-            return "CLASS_STATUS_INITIALIZED";
-        case 8:
-            return "CLASS_STATUS_ERROR";
-        case 16:
-            return "CLASS_STATUS_ARRAY";
-        case 32:
-            return "CLASS_STATUS_PRIMITIVE";
-        default:
-            std::string retu = "Invalid Status Int: " + std::to_string(status);
-            const char* ret = retu.c_str();
-            return ret;
+std::string GetStatusIntAsString(int status) {
+    std::stringstream stream;
+    if (status & JVMTI_CLASS_STATUS_VERIFIED) {
+        stream << "|CLASS_STATUS_VERIFIED|";
     }
+    if (status & JVMTI_CLASS_STATUS_PREPARED) {
+        stream << "|CLASS_STATUS_PREPARED|";
+    }
+    if (status & JVMTI_CLASS_STATUS_INITIALIZED) {
+        stream << "|CLASS_STATUS_INITIALIZED|";
+    }
+    if (status & JVMTI_CLASS_STATUS_ERROR) {
+        stream << "|CLASS_STATUS_ERROR|";
+    }
+    if (status & JVMTI_CLASS_STATUS_ARRAY) {
+        stream << "|CLASS_STATUS_ARRAY|";
+    }
+    if (status & JVMTI_CLASS_STATUS_PRIMITIVE) {
+        stream << "|CLASS_STATUS_PRIMITIVE|";
+    }
+    return stream.str();
 }
 
 
@@ -925,7 +929,7 @@ void MainThread(HMODULE instance)
             curer = TIenv->GetClassStatus(clazz, &statusint);
             std::cout << "GetEx5: " << GetJVMTIError(curer) << std::endl;
 
-            std::vector<std::string> retrunable = { btoi(isinterbool), std::to_string(major) + "." + std::to_string(minor), btoi(ismodbool), btoi(isarrbool), GetAccessFlagAsString((int)flagsint), GetStatusIntAsString((int)statusint)};
+            std::vector<std::string> retrunable = { btoi(isinterbool), std::to_string(major) + "." + std::to_string(minor), btoi(ismodbool), btoi(isarrbool), GetAccessFlagAsString(flagsint), GetStatusIntAsString(statusint)};
 
 
             /*

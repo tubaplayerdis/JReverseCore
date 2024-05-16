@@ -29,6 +29,7 @@ ClassFile ClassFileManager::FindClassFile(std::string name)
 
 int ClassFileManager::FindClassFileIndex(std::string name)
 {
+    //More Efficent way
     for (int i = 0; i < ClassFileManager::ClassFilesList.size(); i++) 
     {
         if (ClassFileManager::ClassFilesList[i].classname == name) return i;
