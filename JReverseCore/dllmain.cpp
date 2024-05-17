@@ -1245,10 +1245,32 @@ void MainThread(HMODULE instance)
                 jclass toredef = jniEnv->FindClass(args[0].c_str());
                 const jclass* pointers = { &toredef };
                 if (toredef != nullptr) {
+                    //Add Check to see if modifyable. Crahses otherwise
                     const char* returnable = GetJVMTIError(TIenv->RetransformClasses(1, pointers));
                     PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Retransform Classes Callback: ", returnable});
                 }
             }
+        }
+        else if (called == "retransformClasses") {
+            /*
+            Add modifyable check
+            */
+            if (args[0].empty()) {
+                std::cout << "Args Empty on retransform" << std::endl;
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Args Empty!"});
+                continue;
+            }
+            std::vector<jclass> classrefs;
+            classrefs.reserve(args.size());
+            for (int i = 0; i < args.size(); i++) 
+            {
+                jclass adder = jniEnv->FindClass(args[i].c_str());
+                if (adder != nullptr) classrefs.emplace_back(adder);
+            }
+            std::cout << "Got all JClass refs" << std::endl;
+            const jclass* pointers = classrefs.data();
+            const char* returnable = GetJVMTIError(TIenv->RetransformClasses(classrefs.size(), pointers));
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Retransform Classes Callback: ", returnable});
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
