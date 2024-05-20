@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <iterator>
+#include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/any/basic_any.hpp>
@@ -18,16 +19,21 @@ public:
     void WritePipe(const T& data);
     T ReadPipe();
     JReversePipeInfo GetInfo();
+    void Resize(int size);
 private:
     boost::interprocess::windows_shared_memory shm;
     boost::interprocess::mapped_region region;
     size_t writtenSize;
+    std::string name;
+    boost::interprocess::mode_t mode;
 };
 
 template<typename T>
 inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode_t Mode, int Size)
 {
-    //This was stolen
+    //Store for resize data
+    name = Name;
+    mode = Mode;
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
     windows_shared_memory ghm(create_only, Name.c_str(), Mode, Size);
@@ -147,6 +153,22 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
     returnable.Size = region.get_size();
     returnable.Mode = shm.get_mode();
     return returnable;
+}
+
+template<typename T>
+inline void JReversePipe<T>::Resize(int size)
+{
+    //Set data to 1
+    std::memset(region.get_address(), 1, region.get_size());
+
+    using namespace boost::interprocess;
+    windows_shared_memory ghm(create_only, name.c_str(), mode, 70000);
+    mapped_region regionn(ghm, mode);
+
+    ghm.swap(shm);
+    regionn.swap(region);
+
+    writtenSize = sizeof(T);
 }
 
 

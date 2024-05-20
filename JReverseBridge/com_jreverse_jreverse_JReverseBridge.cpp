@@ -138,6 +138,7 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InjectDL
 
 JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStartupPipe(JNIEnv* env, jclass, jobjectArray rulesArray, jobject settings)
 {
+    PipeAPI::CommunicationPipe.WritePipe("NONE");
     jclass RuleClass = env->FindClass("com/jreverse/jreverse/StartupRule");
     jfieldID RuleNameID = env->GetFieldID(RuleClass, "ClassName", "Ljava/lang/String;");
     jfieldID RuleBytecodesID = env->GetFieldID(RuleClass, "ByteCodes", "Ljava/lang/String;");

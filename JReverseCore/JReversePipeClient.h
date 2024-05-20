@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <iterator>
+#include <iostream>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/any/basic_any.hpp>
@@ -18,16 +19,21 @@ public:
     void WritePipe(const T& data);
     T ReadPipe();
     JReversePipeInfo GetInfo();
+    void Reconnect();
 private:
     boost::interprocess::windows_shared_memory shm;
     boost::interprocess::mapped_region region;
     size_t writtenSize;
+    std::string name;
+    boost::interprocess::mode_t mode;
 };
 
 template<typename T>
 inline JReversePipeClient<T>::JReversePipeClient(std::string Name, boost::interprocess::mode_t Mode)
 {
-    //This was stolen
+    //Store for reconnection data
+    name = Name;
+    mode = Mode;
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
     windows_shared_memory ghm(open_only, Name.c_str(), Mode);
@@ -143,6 +149,31 @@ inline JReversePipeInfo JReversePipeClient<T>::GetInfo()
     returnable.Size = region.get_size();
     returnable.Mode = shm.get_mode();
     return returnable;
+}
+
+template<typename T>
+inline void JReversePipeClient<T>::Reconnect()
+{
+    std::cout << "Old Address: " << region.get_address() << std::endl;
+    std::cout << "Old Size: " << region.get_size() << std::endl;
+    std::cout << "Old Mapping Handle: " << shm.get_mapping_handle().handle << std::endl;
+    using namespace boost::interprocess;
+    //Create a native windows shared memory object.
+    windows_shared_memory ghm(open_only, name.c_str(), mode);
+    
+    std::cout << "New Connected Size: " << ghm.get_size() << std::endl;
+    std::cout << "New Mapping Handle: " << ghm.get_mapping_handle().handle << std::endl;
+    
+
+    //Map the whole shared memory in this process
+    mapped_region regionn(ghm, mode);
+
+    ghm.swap(shm);
+    regionn.swap(region);
+
+    std::cout << "New Address: " << region.get_address() << std::endl;
+    std::cout << "New Size: " << region.get_size() << std::endl;
+    writtenSize = sizeof(T);
 }
 
 

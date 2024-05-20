@@ -1,4 +1,4 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
+﻿// dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include <windows.h>
 #include <jni.h>
@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <filesystem>
 #include <chrono>
+#include <conio.h> 
 #include "PipeManager.h"
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include "PipeClientAPI.h"
@@ -788,9 +789,83 @@ void MainThread(HMODULE instance)
 
     std::printf("Starting Function Call Loop\n");
 
+    system("cls");
+
+    //This dosent work.
+    std::cout << "     ██╗██████╗ ███████╗██╗   ██╗███████╗██████╗ ███████╗███████╗    ██╗   ██╗ ██╗    ██████╗ " << std::endl;
+    std::cout << "     ██║██╔══██╗██╔════╝██║   ██║██╔════╝██╔══██╗██╔════╝██╔════╝    ██║   ██║███║   ██╔═████╗" << std::endl;
+    std::cout << "     ██║██████╔╝█████╗  ██║   ██║█████╗  ██████╔╝███████╗█████╗      ██║   ██║╚██║   ██║██╔██║" << std::endl;
+    std::cout << "██   ██║██╔══██╗██╔══╝  ╚██╗ ██╔╝██╔══╝  ██╔══██╗╚════██║██╔══╝      ╚██╗ ██╔╝ ██║   ████╔╝██║" << std::endl;
+    std::cout << "╚█████╔╝██║  ██║███████╗ ╚████╔╝ ███████╗██║  ██║███████║███████╗     ╚████╔╝  ██║██╗╚██████╔╝" << std::endl;
+    std::cout << " ╚════╝ ╚═╝  ╚═╝╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝      ╚═══╝   ╚═╝╚═╝ ╚═════╝ " << std::endl;
+
+    //https://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=JReverse%20V1.0
+    //FONT: ANSI Shadow, everything else defualt.
+
     while (true) {
 
         while (true) {
+            if (GetAsyncKeyState(VK_F12) & 0x01) {
+                bool restore = JReverseStartupSettings::isClassFileLoadMessages;
+                JReverseStartupSettings::isClassFileLoadMessages = false;
+                std::cout << "----------------------------------------------" << std::endl;
+                std::cout << "JReverse Console. Enter a Command: ";
+                std::string command;
+                std::cin >> command;
+                if (command == "RECONNECT") {
+                    std::cout << "\nWhich Pipe? ";
+                    std::string pip;
+                    std::cin >> pip;
+                    std::cout << "\n\nRECONNECTING: " << pip << std::endl;
+                    if (pip == "CriticalFunctionPipe") {
+                        PipeClientAPI::FunctionPipe.Reconnect();
+                    }
+                    else if (pip == "CriticalFunctionArgPipe") {
+                        PipeClientAPI::FunctionArgPipe.Reconnect();
+                    }
+                    else if (pip == "CriticalReturnPipe") {
+                        PipeClientAPI::ReturnPipe.Reconnect();
+                    }
+                    else if (pip == "CriticalPipeNamePipe") {
+                        PipeClientAPI::PipeNamePipe.Reconnect();
+                    }
+                    else if (pip == "CriticalStartupPipe") {
+                        PipeClientAPI::StartupPipe.Reconnect();
+                    }
+                    else if (pip == "CriticalSettingsPipe") {
+                        PipeClientAPI::SettingsPipe.Reconnect();
+                    }
+                }
+
+                JReverseStartupSettings::isClassFileLoadMessages = restore;
+            }
+
+
+            if (PipeClientAPI::CommunicationPipe.ReadPipe().find("RECONNECT") != std::string::npos) {
+                std::string command = PipeClientAPI::CommunicationPipe.ReadPipe();
+                std::string pip = command.substr(10);
+                std::cout << "Reconnecting: " << pip << std::endl;
+                if (pip == "CriticalFunctionPipe") {
+                    PipeClientAPI::FunctionPipe.Reconnect();
+                }
+                else if (pip == "CriticalFunctionArgPipe") {
+                    PipeClientAPI::FunctionArgPipe.Reconnect();
+                }
+                else if (pip == "CriticalReturnPipe") {
+                    PipeClientAPI::ReturnPipe.Reconnect();
+                }
+                else if (pip == "CriticalPipeNamePipe") {
+                    PipeClientAPI::PipeNamePipe.Reconnect();
+                }
+                else if (pip == "CriticalStartupPipe") {
+                    PipeClientAPI::StartupPipe.Reconnect();
+                }
+                else if (pip == "CriticalSettingsPipe") {
+                    PipeClientAPI::SettingsPipe.Reconnect();
+                }
+                PipeClientAPI::CommunicationPipe.WritePipe("NONE");
+            }
+
             if (!PipeClientAPI::isFunctionPipeNone()) {
                 std::printf("Function Call Detected!\n");
                 break;
@@ -836,7 +911,7 @@ void MainThread(HMODULE instance)
                 }
             }
 #pragma endregion
-            Sleep(10);
+            Sleep(5);
             //Part of main loop    
         }
         std::printf("Looping Func\n");
@@ -1245,10 +1320,24 @@ void MainThread(HMODULE instance)
                 jclass toredef = jniEnv->FindClass(args[0].c_str());
                 const jclass* pointers = { &toredef };
                 if (toredef != nullptr) {
-                    //Add Check to see if modifyable. Crahses otherwise
-                    const char* returnable = GetJVMTIError(TIenv->RetransformClasses(1, pointers));
-                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Retransform Classes Callback: ", returnable});
+                    //IsModifyable
+                    jboolean ismodbool;
+                    TIenv->IsModifiableClass(toredef, &ismodbool);
+                    if (ismodbool) {
+                        std::string returnable = GetJVMTIError(TIenv->RetransformClasses(1, pointers));
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Retransform Classes Callback: ", returnable});
+                    }
+                    else
+                    {
+                        PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Class Cannot be modded!", "Class Cannot be modded!"});
+                    }
+                    
                 }
+                else
+                {
+                    PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Class ref null", "Class ref null"});
+                }
+                jniEnv->DeleteLocalRef(toredef);
             }
         }
         else if (called == "retransformClasses") {
@@ -1286,6 +1375,7 @@ bool __stdcall DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
     if (reason == DLL_PROCESS_ATTACH)
     {
         AllocConsole();
+        freopen_s(&p_file, "CONIN$", "r", stdin);
         freopen_s(&p_file, "CONOUT$", "w", stdout);
         freopen_s(&p_file, "CONOUT$", "w", stderr);
 

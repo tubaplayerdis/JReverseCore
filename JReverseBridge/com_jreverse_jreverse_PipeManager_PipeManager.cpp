@@ -1,6 +1,8 @@
 #include "com_jreverse_jreverse_PipeManager_PipeManager.h"
 #include "PipeAPI.h"
 #include "JReversePipeInfo.h"
+#include <string>
+#include <sstream>
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_InitAPI(JNIEnv*, jclass)
 {
@@ -110,4 +112,32 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_AddPip
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_RemovePipe(JNIEnv*, jclass, jstring name)
 {
     return;
+}
+
+JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_ResizeAndReconnectPipe(JNIEnv* env, jclass, jstring name, jint size)
+{
+    std::stringstream pipename;
+    pipename << "RECONNECT ";
+    pipename << env->GetStringUTFChars(name, NULL);
+    std::string command = pipename.str();
+    PipeAPI::CommunicationPipe.WritePipe(command);
+    const char* pip = env->GetStringUTFChars(name, NULL);
+    if (pip == "CriticalFunctionPipe") {
+        PipeAPI::FunctionPipe.Resize(size);
+    }
+    else if (pip == "CriticalFunctionArgPipe") {
+        PipeAPI::FunctionArgPipe.Resize(size);
+    }
+    else if (pip == "CriticalReturnPipe") {
+        PipeAPI::ReturnPipe.Resize(size);
+    }
+    else if (pip == "CriticalPipeNamePipe") {
+        PipeAPI::PipeNamePipe.Resize(size);
+    }
+    else if (pip == "CriticalStartupPipe") {
+        PipeAPI::StartupRulesPipe.Resize(size);
+    }
+    else if (pip == "CriticalSettingsPipe") {
+        PipeAPI::SettingsPipe.Resize(size);
+    }
 }
