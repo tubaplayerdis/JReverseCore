@@ -122,22 +122,5 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_Resize
     std::string command = pipename.str();
     PipeAPI::CommunicationPipe.WritePipe(command);
     const char* pip = env->GetStringUTFChars(name, NULL);
-    if (pip == "CriticalFunctionPipe") {
-        PipeAPI::FunctionPipe.Resize(size);
-    }
-    else if (pip == "CriticalFunctionArgPipe") {
-        PipeAPI::FunctionArgPipe.Resize(size);
-    }
-    else if (pip == "CriticalReturnPipe") {
-        PipeAPI::ReturnPipe.Resize(size);
-    }
-    else if (pip == "CriticalPipeNamePipe") {
-        PipeAPI::PipeNamePipe.Resize(size);
-    }
-    else if (pip == "CriticalStartupPipe") {
-        PipeAPI::StartupRulesPipe.Resize(size);
-    }
-    else if (pip == "CriticalSettingsPipe") {
-        PipeAPI::SettingsPipe.Resize(size);
-    }
+    PipeAPI::ResizePipe(pip, size, env);
 }

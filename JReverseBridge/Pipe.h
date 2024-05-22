@@ -16,10 +16,13 @@ class JReversePipe
 {
 public:
     JReversePipe(std::string Name, boost::interprocess::mode_t Mode, int Size);
+    JReversePipe() = default;
+    JReversePipe(const JReversePipe&) = default;
+    JReversePipe operator=(const JReversePipe) = default;
+    ~JReversePipe();
     void WritePipe(const T& data);
     T ReadPipe();
     JReversePipeInfo GetInfo();
-    void Resize(int size);
 private:
     boost::interprocess::windows_shared_memory shm;
     boost::interprocess::mapped_region region;
@@ -49,6 +52,14 @@ inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode
 
     writtenSize = sizeof(T);
 
+}
+
+template<typename T>
+inline JReversePipe<T>::~JReversePipe()
+{
+    region.flush();
+    region.~mapped_region();
+    shm.~windows_shared_memory();
 }
 
 template<typename T>
@@ -153,22 +164,6 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
     returnable.Size = region.get_size();
     returnable.Mode = shm.get_mode();
     return returnable;
-}
-
-template<typename T>
-inline void JReversePipe<T>::Resize(int size)
-{
-    //Set data to 1
-    std::memset(region.get_address(), 1, region.get_size());
-
-    using namespace boost::interprocess;
-    windows_shared_memory ghm(create_only, name.c_str(), mode, 70000);
-    mapped_region regionn(ghm, mode);
-
-    ghm.swap(shm);
-    regionn.swap(region);
-
-    writtenSize = sizeof(T);
 }
 
 

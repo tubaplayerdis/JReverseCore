@@ -4,6 +4,7 @@
 #include <boost/any/basic_any.hpp>
 #include "Pipe.h"
 #include "JReversePipeInfo.h"
+#include "JReverseLogger.h"
 
 const std::vector<std::string> PipeAPI::noneVec = std::vector<std::string>{ "NONE" };
 const std::string PipeAPI::noneStr = "NONE";
@@ -93,6 +94,36 @@ void PipeAPI::AddPipeToList(std::string name)
     std::vector<std::string> cur = PipeAPI::PipeNamePipe.ReadPipe();
     cur.push_back(name);
     PipeAPI::PipeNamePipe.WritePipe(cur);
+}
+
+void PipeAPI::ResizePipe(std::string name, int size, JNIEnv* env)
+{
+    JReverseLogger logger = JReverseLogger(env);
+    logger.Log("Redefining: " + name);
+    if (name == "CriticalFunctionPipe") {
+        PipeAPI::FunctionPipe.~JReversePipe();
+        PipeAPI::FunctionPipe = JReversePipe<std::string>("CriticalFunctionPipe", boost::interprocess::read_write, size);
+    }
+    else if (name == "CriticalFunctionArgPipe") {
+        PipeAPI::FunctionArgPipe.~JReversePipe();
+        PipeAPI::FunctionArgPipe = JReversePipe<std::vector<std::string>>("CriticalFunctionArgPipe", boost::interprocess::read_write, size);
+    }
+    else if (name == "CriticalReturnPipe") {
+        PipeAPI::ReturnPipe.~JReversePipe();
+        PipeAPI::ReturnPipe = JReversePipe<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write, size);
+    }
+    else if (name == "CriticalPipeNamePipe") {
+        PipeAPI::PipeNamePipe.~JReversePipe();
+        PipeAPI::PipeNamePipe = JReversePipe<std::vector<std::string>>("CriticalPipeNamePipe", boost::interprocess::read_write, size);
+    }
+    else if (name == "CriticalStartupPipe") {
+        PipeAPI::StartupRulesPipe.~JReversePipe();
+        PipeAPI::StartupRulesPipe = JReversePipe<std::vector<std::string>>("CriticalStartupPipe", boost::interprocess::read_write, size);
+    }
+    else if (name == "CriticalSettingsPipe") {
+        PipeAPI::SettingsPipe.~JReversePipe();
+        PipeAPI::SettingsPipe = JReversePipe<std::vector<std::string>>("CriticalSettingsPipe", boost::interprocess::read_write, size);
+    }
 }
 
 std::vector<std::string> PipeAPI::ReadReturnPipeAR()
