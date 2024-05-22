@@ -22,12 +22,12 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManage
     
     //PipeAPI::PipeNamePipe.WritePipe(exdata);
    
-
+    /*
     JReversePipe<int> mypipe = JReversePipe<int>("MyIntPipe", boost::interprocess::read_write, 1000);
     PipeAPI::AddPipeToList("MyIntPipe:int");
     mypipe.WritePipe(345);
     int noway = mypipe.ReadPipe();
-
+    */
     
    
     
@@ -120,7 +120,8 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_Resize
     pipename << "RECONNECT ";
     pipename << env->GetStringUTFChars(name, NULL);
     std::string command = pipename.str();
-    PipeAPI::CommunicationPipe.WritePipe(command);
     const char* pip = env->GetStringUTFChars(name, NULL);
     PipeAPI::ResizePipe(pip, size, env);
+
+    PipeAPI::CommunicationPipe.WritePipe(command);
 }

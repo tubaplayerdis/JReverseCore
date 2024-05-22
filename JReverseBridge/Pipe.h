@@ -1,8 +1,8 @@
 #pragma once
+#include <algorithm>
 #include <string>
 #include <memory.h>
 #include <type_traits>
-#include <algorithm>
 #include <iterator>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/windows_shared_memory.hpp>
@@ -16,13 +16,11 @@ class JReversePipe
 {
 public:
     JReversePipe(std::string Name, boost::interprocess::mode_t Mode, int Size);
-    JReversePipe() = default;
-    JReversePipe(const JReversePipe&) = default;
-    JReversePipe operator=(const JReversePipe) = default;
     ~JReversePipe();
     void WritePipe(const T& data);
     T ReadPipe();
     JReversePipeInfo GetInfo();
+    void Resize(int newSize);
 private:
     boost::interprocess::windows_shared_memory shm;
     boost::interprocess::mapped_region region;
@@ -38,6 +36,7 @@ inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode
     name = Name;
     mode = Mode;
     using namespace boost::interprocess;
+
     //Create a native windows shared memory object.
     windows_shared_memory ghm(create_only, Name.c_str(), Mode, Size);
 
@@ -164,6 +163,24 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
     returnable.Size = region.get_size();
     returnable.Mode = shm.get_mode();
     return returnable;
+}
+
+template<typename T>
+inline void JReversePipe<T>::Resize(int newSize)
+{
+    using namespace boost::interprocess;
+
+    // Create a new shared memory object with the new size
+    windows_shared_memory newShm(create_only, name.c_str(), mode, newSize);
+    mapped_region newRegion(newShm, mode);
+
+    // Copy data from the old region to the new region
+    //std::size_t copySize = min(region.get_size(), newRegion.get_size());
+    //std::memcpy(newRegion.get_address(), region.get_address(), copySize);
+
+    // Swap the new shared memory and region with the old ones
+    shm.swap(newShm);
+    region.swap(newRegion);
 }
 
 

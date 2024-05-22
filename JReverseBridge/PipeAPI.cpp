@@ -101,28 +101,22 @@ void PipeAPI::ResizePipe(std::string name, int size, JNIEnv* env)
     JReverseLogger logger = JReverseLogger(env);
     logger.Log("Redefining: " + name);
     if (name == "CriticalFunctionPipe") {
-        PipeAPI::FunctionPipe.~JReversePipe();
-        PipeAPI::FunctionPipe = JReversePipe<std::string>("CriticalFunctionPipe", boost::interprocess::read_write, size);
+        PipeAPI::FunctionPipe.Resize(size);
     }
     else if (name == "CriticalFunctionArgPipe") {
-        PipeAPI::FunctionArgPipe.~JReversePipe();
-        PipeAPI::FunctionArgPipe = JReversePipe<std::vector<std::string>>("CriticalFunctionArgPipe", boost::interprocess::read_write, size);
+        PipeAPI::FunctionArgPipe.Resize(size);
     }
     else if (name == "CriticalReturnPipe") {
-        PipeAPI::ReturnPipe.~JReversePipe();
-        PipeAPI::ReturnPipe = JReversePipe<std::vector<std::string>>("CriticalReturnPipe", boost::interprocess::read_write, size);
+        PipeAPI::ReturnPipe.Resize(size);
     }
     else if (name == "CriticalPipeNamePipe") {
-        PipeAPI::PipeNamePipe.~JReversePipe();
-        PipeAPI::PipeNamePipe = JReversePipe<std::vector<std::string>>("CriticalPipeNamePipe", boost::interprocess::read_write, size);
+        PipeAPI::PipeNamePipe.Resize(size);
     }
     else if (name == "CriticalStartupPipe") {
-        PipeAPI::StartupRulesPipe.~JReversePipe();
-        PipeAPI::StartupRulesPipe = JReversePipe<std::vector<std::string>>("CriticalStartupPipe", boost::interprocess::read_write, size);
+        PipeAPI::StartupRulesPipe.Resize(size);
     }
     else if (name == "CriticalSettingsPipe") {
-        PipeAPI::SettingsPipe.~JReversePipe();
-        PipeAPI::SettingsPipe = JReversePipe<std::vector<std::string>>("CriticalSettingsPipe", boost::interprocess::read_write, size);
+        PipeAPI::SettingsPipe.Resize(size);
     }
 }
 

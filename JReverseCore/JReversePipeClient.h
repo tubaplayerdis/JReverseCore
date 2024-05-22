@@ -168,8 +168,8 @@ inline void JReversePipeClient<T>::Reconnect()
     //Map the whole shared memory in this process
     mapped_region regionn(ghm, mode);
 
-    ghm.swap(shm);
-    regionn.swap(region);
+    this->shm.swap(ghm);
+    this->region.swap(regionn);
 
     std::cout << "New Address: " << region.get_address() << std::endl;
     std::cout << "New Size: " << region.get_size() << std::endl;
