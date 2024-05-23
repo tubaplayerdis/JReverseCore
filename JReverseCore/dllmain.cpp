@@ -816,7 +816,7 @@ void MainThread(HMODULE instance)
                     std::cout << "\nWhich Pipe? ";
                     std::string pip;
                     std::cin >> pip;
-                    std::cout << "\n\nRECONNECTING: " << pip << std::endl;
+                    std::cout << "\nRECONNECTING: " << pip << std::endl;
                     if (pip == "CriticalFunctionPipe") {
                         PipeClientAPI::FunctionPipe.Reconnect();
                     }
@@ -837,7 +837,34 @@ void MainThread(HMODULE instance)
                     }
                 }
 
+                if (command == "DISCONNECT") {
+                    std::cout << "\nWhich Pipe? ";
+                    std::string pip;
+                    std::cin >> pip;
+                    std::cout << "\nDISCONNECTING: " << pip << std::endl;
+                    if (pip == "CriticalFunctionPipe") {
+                        PipeClientAPI::FunctionPipe.Disconnect();
+                    }
+                    else if (pip == "CriticalFunctionArgPipe") {
+                        PipeClientAPI::FunctionArgPipe.Disconnect();
+                    }
+                    else if (pip == "CriticalReturnPipe") {
+                        PipeClientAPI::ReturnPipe.Disconnect();
+                    }
+                    else if (pip == "CriticalPipeNamePipe") {
+                        PipeClientAPI::PipeNamePipe.Disconnect();
+                    }
+                    else if (pip == "CriticalStartupPipe") {
+                        PipeClientAPI::StartupPipe.Disconnect();
+                    }
+                    else if (pip == "CriticalSettingsPipe") {
+                        PipeClientAPI::SettingsPipe.Disconnect();
+                    }
+                }
+
                 JReverseStartupSettings::isClassFileLoadMessages = restore;
+
+                std::cout << "Exiting JReverse Console..." << std::endl;
             }
 
 

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/managed_windows_shared_memory.hpp>
 #include <boost/any/basic_any.hpp>
 #include "JReversePipeInfo.h"
 #include "JReversePipeHelper.h"
@@ -22,7 +23,7 @@ public:
     void Reconnect();
     void Disconnect();
 private:
-    boost::interprocess::windows_shared_memory shm;
+    boost::interprocess::managed_windows_shared_memory shm;
     boost::interprocess::mapped_region region;
     size_t writtenSize;
     std::string name;
@@ -37,7 +38,7 @@ inline JReversePipeClient<T>::JReversePipeClient(std::string Name, boost::interp
     mode = Mode;
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
-    windows_shared_memory ghm(open_only, Name.c_str(), Mode);
+    managed_windows_shared_memory ghm(open_only, Name.c_str());
 
     //Map the whole shared memory in this process
     mapped_region regionn(ghm, Mode);
@@ -146,9 +147,9 @@ template<typename T>
 inline JReversePipeInfo JReversePipeClient<T>::GetInfo()
 {
     JReversePipeInfo returnable;
-    returnable.Name = std::string(shm.get_name());
+    returnable.Name = std::string(name);
     returnable.Size = region.get_size();
-    returnable.Mode = shm.get_mode();
+    returnable.Mode = mode;
     return returnable;
 }
 
@@ -157,13 +158,13 @@ inline void JReversePipeClient<T>::Reconnect()
 {
     std::cout << "Old Address: " << region.get_address() << std::endl;
     std::cout << "Old Size: " << region.get_size() << std::endl;
-    std::cout << "Old Mapping Handle: " << shm.get_mapping_handle().handle << std::endl;
+    std::cout << "Old Mapping Handle: " << shm.get_address() << std::endl;
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
-    windows_shared_memory ghm(open_only, name.c_str(), mode);
+    managed_windows_shared_memory ghm(open_only, name.c_str());
     
     std::cout << "New Connected Size: " << ghm.get_size() << std::endl;
-    std::cout << "New Mapping Handle: " << ghm.get_mapping_handle().handle << std::endl;
+    std::cout << "New Mapping Handle: " << ghm.get_address().handle << std::endl;
     
 
     //Map the whole shared memory in this process
@@ -174,14 +175,12 @@ inline void JReversePipeClient<T>::Reconnect()
 
     std::cout << "New Address: " << region.get_address() << std::endl;
     std::cout << "New Size: " << region.get_size() << std::endl;
-    writtenSize = sizeof(T);
 }
 
 template<typename T>
 inline void JReversePipeClient<T>::Disconnect()
 {
-    shm.~windows_shared_memory();
-    region.~mapped_region();
+    //Dont use this.
 }
 
 

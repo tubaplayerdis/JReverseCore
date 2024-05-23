@@ -7,6 +7,7 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/managed_windows_shared_memory.hpp>
 #include <boost/any/basic_any.hpp>
 #include "JReversePipeInfo.h"
 #include "JReversePipeHelper.h"
@@ -21,7 +22,7 @@ public:
     JReversePipeInfo GetInfo();
     std::string Resize(int newSize);
 private:
-    boost::interprocess::windows_shared_memory shm;
+    boost::interprocess::managed_windows_shared_memory shm;
     boost::interprocess::mapped_region region;
     size_t writtenSize;
     std::string name;
@@ -37,7 +38,7 @@ inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode
     using namespace boost::interprocess;
 
     //Create a native windows shared memory object.
-    windows_shared_memory ghm(create_only, Name.c_str(), Mode, Size);
+    managed_windows_shared_memory ghm(create_only, Name.c_str(), Mode, Size);
 
     //Map the whole shared memory in this process
     mapped_region regionn(ghm, Mode);
@@ -151,7 +152,7 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
 {
     JReversePipeInfo returnable;
     returnable.Name = std::string(shm.get_name());
-    returnable.Size = region.get_size();
+    returnable.Size = shm.get_size();
     returnable.Mode = shm.get_mode();
     return returnable;
 }
@@ -159,30 +160,8 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
 template<typename T>
 inline std::string JReversePipe<T>::Resize(int newSize)
 {
-    using namespace boost::interprocess;
-
-    shm.~windows_shared_memory();
-    region.~mapped_region();
-
-    // Create a new shared memory object with the new size
-    try {
-        windows_shared_memory newShm(create_only, name.c_str(), mode, newSize);
-        mapped_region newRegion(newShm, mode);
-
-        // Copy data from the old region to the new region
-        //std::size_t copySize = min(region.get_size(), newRegion.get_size());
-        //std::memcpy(newRegion.get_address(), region.get_address(), copySize);
-        std::memset(newRegion.get_address(), 1, newRegion.get_size());
-
-        // Swap the new shared memory and region with the old ones
-        shm.swap(newShm);
-        region.swap(newRegion);
-    }
-    catch (boost::interprocess::interprocess_exception e) {
-        return e.what();
-    }
-    
-
+    int growamount = newSize - shm.get_size();
+    shm.grow(growamount);
     return "Sucsess!";
 }
 

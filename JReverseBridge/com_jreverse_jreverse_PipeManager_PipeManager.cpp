@@ -3,6 +3,7 @@
 #include "JReversePipeInfo.h"
 #include <string>
 #include <sstream>
+#include "JReverseLogger.h"
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_InitAPI(JNIEnv*, jclass)
 {
@@ -116,6 +117,7 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_Remove
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_ResizeAndReconnectPipe(JNIEnv* env, jclass, jstring name, jint size)
 {
+    JReverseLogger logger = JReverseLogger(env);
     std::stringstream recname;
     recname << "RECONNECT ";
     recname << env->GetStringUTFChars(name, NULL);
@@ -124,7 +126,9 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_Resize
     std::string discommand = "DISCONNECT ";
     discommand.append(pip);
     PipeAPI::CommunicationPipe.WritePipe(discommand);
+    logger.Log("Logged Disconnect Command!");
     Sleep(100);
     PipeAPI::ResizePipe(pip, size, env);
+    logger.Log("Resized Pipe!");
     PipeAPI::CommunicationPipe.WritePipe(command);
 }
