@@ -20,6 +20,7 @@ public:
     T ReadPipe();
     JReversePipeInfo GetInfo();
     void Reconnect();
+    void Disconnect();
 private:
     boost::interprocess::windows_shared_memory shm;
     boost::interprocess::mapped_region region;
@@ -174,6 +175,13 @@ inline void JReversePipeClient<T>::Reconnect()
     std::cout << "New Address: " << region.get_address() << std::endl;
     std::cout << "New Size: " << region.get_size() << std::endl;
     writtenSize = sizeof(T);
+}
+
+template<typename T>
+inline void JReversePipeClient<T>::Disconnect()
+{
+    shm.~windows_shared_memory();
+    region.~mapped_region();
 }
 
 

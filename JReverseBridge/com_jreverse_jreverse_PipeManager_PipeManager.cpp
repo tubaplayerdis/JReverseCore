@@ -116,12 +116,15 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_Remove
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_ResizeAndReconnectPipe(JNIEnv* env, jclass, jstring name, jint size)
 {
-    std::stringstream pipename;
-    pipename << "RECONNECT ";
-    pipename << env->GetStringUTFChars(name, NULL);
-    std::string command = pipename.str();
+    std::stringstream recname;
+    recname << "RECONNECT ";
+    recname << env->GetStringUTFChars(name, NULL);
+    std::string command = recname.str();
     const char* pip = env->GetStringUTFChars(name, NULL);
+    std::string discommand = "DISCONNECT ";
+    discommand.append(pip);
+    PipeAPI::CommunicationPipe.WritePipe(discommand);
+    Sleep(100);
     PipeAPI::ResizePipe(pip, size, env);
-
     PipeAPI::CommunicationPipe.WritePipe(command);
 }

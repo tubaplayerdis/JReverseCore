@@ -866,6 +866,31 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::CommunicationPipe.WritePipe("NONE");
             }
 
+            if (PipeClientAPI::CommunicationPipe.ReadPipe().find("DISCONNECT") != std::string::npos) {
+                std::string command = PipeClientAPI::CommunicationPipe.ReadPipe();
+                std::string pip = command.substr(11);
+                std::cout << "Disconnecting: " << pip << std::endl;
+                if (pip == "CriticalFunctionPipe") {
+                    PipeClientAPI::FunctionPipe.Disconnect();
+                }
+                else if (pip == "CriticalFunctionArgPipe") {
+                    PipeClientAPI::FunctionArgPipe.Disconnect();
+                }
+                else if (pip == "CriticalReturnPipe") {
+                    PipeClientAPI::ReturnPipe.Disconnect();
+                }
+                else if (pip == "CriticalPipeNamePipe") {
+                    PipeClientAPI::PipeNamePipe.Disconnect();
+                }
+                else if (pip == "CriticalStartupPipe") {
+                    PipeClientAPI::StartupPipe.Disconnect();
+                }
+                else if (pip == "CriticalSettingsPipe") {
+                    PipeClientAPI::SettingsPipe.Disconnect();
+                }
+                PipeClientAPI::CommunicationPipe.WritePipe("NONE");
+            }
+
             if (!PipeClientAPI::isFunctionPipeNone()) {
                 std::printf("Function Call Detected!\n");
                 break;

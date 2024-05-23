@@ -16,11 +16,10 @@ class JReversePipe
 {
 public:
     JReversePipe(std::string Name, boost::interprocess::mode_t Mode, int Size);
-    ~JReversePipe();
     void WritePipe(const T& data);
     T ReadPipe();
     JReversePipeInfo GetInfo();
-    void Resize(int newSize);
+    std::string Resize(int newSize);
 private:
     boost::interprocess::windows_shared_memory shm;
     boost::interprocess::mapped_region region;
@@ -51,14 +50,6 @@ inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode
 
     writtenSize = sizeof(T);
 
-}
-
-template<typename T>
-inline JReversePipe<T>::~JReversePipe()
-{
-    region.flush();
-    region.~mapped_region();
-    shm.~windows_shared_memory();
 }
 
 template<typename T>
@@ -166,21 +157,33 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
 }
 
 template<typename T>
-inline void JReversePipe<T>::Resize(int newSize)
+inline std::string JReversePipe<T>::Resize(int newSize)
 {
     using namespace boost::interprocess;
 
+    shm.~windows_shared_memory();
+    region.~mapped_region();
+
     // Create a new shared memory object with the new size
-    windows_shared_memory newShm(create_only, name.c_str(), mode, newSize);
-    mapped_region newRegion(newShm, mode);
+    try {
+        windows_shared_memory newShm(create_only, name.c_str(), mode, newSize);
+        mapped_region newRegion(newShm, mode);
 
-    // Copy data from the old region to the new region
-    //std::size_t copySize = min(region.get_size(), newRegion.get_size());
-    //std::memcpy(newRegion.get_address(), region.get_address(), copySize);
+        // Copy data from the old region to the new region
+        //std::size_t copySize = min(region.get_size(), newRegion.get_size());
+        //std::memcpy(newRegion.get_address(), region.get_address(), copySize);
+        std::memset(newRegion.get_address(), 1, newRegion.get_size());
 
-    // Swap the new shared memory and region with the old ones
-    shm.swap(newShm);
-    region.swap(newRegion);
+        // Swap the new shared memory and region with the old ones
+        shm.swap(newShm);
+        region.swap(newRegion);
+    }
+    catch (boost::interprocess::interprocess_exception e) {
+        return e.what();
+    }
+    
+
+    return "Sucsess!";
 }
 
 

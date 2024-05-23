@@ -99,25 +99,27 @@ void PipeAPI::AddPipeToList(std::string name)
 void PipeAPI::ResizePipe(std::string name, int size, JNIEnv* env)
 {
     JReverseLogger logger = JReverseLogger(env);
-    logger.Log("Redefining: " + name);
+    logger.Log("Resizing: " + name);
+    std::string cb;
     if (name == "CriticalFunctionPipe") {
-        PipeAPI::FunctionPipe.Resize(size);
+        cb = PipeAPI::FunctionPipe.Resize(size);
     }
     else if (name == "CriticalFunctionArgPipe") {
-        PipeAPI::FunctionArgPipe.Resize(size);
+        cb = PipeAPI::FunctionArgPipe.Resize(size);
     }
     else if (name == "CriticalReturnPipe") {
-        PipeAPI::ReturnPipe.Resize(size);
+        cb = PipeAPI::ReturnPipe.Resize(size);
     }
     else if (name == "CriticalPipeNamePipe") {
-        PipeAPI::PipeNamePipe.Resize(size);
+        cb = PipeAPI::PipeNamePipe.Resize(size);
     }
     else if (name == "CriticalStartupPipe") {
-        PipeAPI::StartupRulesPipe.Resize(size);
+        cb = PipeAPI::StartupRulesPipe.Resize(size);
     }
     else if (name == "CriticalSettingsPipe") {
-        PipeAPI::SettingsPipe.Resize(size);
+        cb = PipeAPI::SettingsPipe.Resize(size);
     }
+    logger.Log("Reized Pipe Callback: "+cb);
 }
 
 std::vector<std::string> PipeAPI::ReadReturnPipeAR()
