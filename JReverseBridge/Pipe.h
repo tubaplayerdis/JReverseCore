@@ -88,11 +88,19 @@ inline void JReversePipe<T>::WritePipe(const T& data)
 
         mutex->lock();
 
-        shm_vector->clear();
+        shm_vector->clear();  
 
-        for (const std::string& str : vec) {
-            ShmString shm_str(str.c_str(), string_allocator);
-            shm_vector->push_back(shm_str);
+        int d = vec.size();
+        int i = 0;
+        try {
+            for (const std::string& str : vec) {
+                ShmString shm_str(str.c_str(), string_allocator);
+                shm_vector->push_back(shm_str);
+                i++;
+            }
+        }
+        catch (boost::interprocess::bad_alloc e) {
+            
         }
 
         mutex->unlock();

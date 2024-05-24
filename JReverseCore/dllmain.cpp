@@ -974,9 +974,6 @@ void MainThread(HMODULE instance)
         }
         else if (called == "getLoadedClasses") {
             std::vector<std::string> sus = getLoadedClassesSignatures(TIenv, jniEnv);
-            for (std::string str : sus) {
-                std::cout << str << std::endl;
-            }
             if (sus.size() * sizeof(std::string) > PipeClientAPI::ReturnPipe.GetInfo().Size) {
                 PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"ERROR: ", "DATA TOO LARGE - ADJUST IN PIPE MANAGER", "SIZE OF DATA,PIPE", std::to_string((int)(sus.size() * sizeof(std::string))), std::to_string(PipeClientAPI::ReturnPipe.GetInfo().Size)});
             }
@@ -984,7 +981,6 @@ void MainThread(HMODULE instance)
             {
                 PipeClientAPI::ReturnPipe.WritePipe(sus);
             }
-            std::cout << "Wrote Pipe!" << std::endl;
         }
         else if (called == "getClassMethods") {
             std::printf("Getting Class Methods\n");

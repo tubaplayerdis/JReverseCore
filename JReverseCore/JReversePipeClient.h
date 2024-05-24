@@ -53,8 +53,6 @@ inline JReversePipeClient<T>::JReversePipeClient(std::string Name, boost::interp
     //Create a native windows shared memory object.
     managed_windows_shared_memory ghm(open_only, Name.c_str());
 
-    //Map the whole shared memory in this process 
-
     ghm.swap(shm);
 
     address = shm.get_address();
@@ -88,13 +86,21 @@ inline void JReversePipeClient<T>::WritePipe(const T& data)
 
         mutex->lock();
         shm_vector->clear();
-        std::cout << "Cleared Vector!" << std::endl;
-        //Cant put in this much data?
-        for (const std::string& str : vec) {
-            ShmString shm_str(str.c_str(), string_allocator);
-            shm_vector->push_back(shm_str);
-            std::cout << "pushed back: " << str << std::endl;
+        
+        int d = vec.size();
+        int i = 0;
+        try {
+            for (const std::string& str : vec) {
+                ShmString shm_str(str.c_str(), string_allocator);
+                shm_vector->push_back(shm_str);
+                i++;
+            }
         }
+        catch (boost::interprocess::bad_alloc e) {
+            std::cout << "Not Enough Memory Avialable! Resize: " << name << " in IPC Manager!" << std::endl;
+            std::cout << "Stopped at: " << i << "/" << d << " Strings" << std::endl;
+        }
+        
         mutex->unlock();
         return;
     }
@@ -188,6 +194,7 @@ inline JReversePipeInfo JReversePipeClient<T>::GetInfo()
 template<typename T>
 inline void JReversePipeClient<T>::Reconnect()
 {
+    //Delete later if causing instability as it is not needed but still "works"
     std::cout << "Old Address: " << shm.get_address() << std::endl;
     using namespace boost::interprocess;
     //Create a native windows shared memory object.

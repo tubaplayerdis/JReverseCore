@@ -7,7 +7,7 @@
 
 JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_InitAPI(JNIEnv*, jclass)
 {
-    //PipeAPI::setCritPipes();
+    PipeAPI::setCritPipes();
 }
 
 JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_GetLoadedPipes(JNIEnv* env, jclass)
