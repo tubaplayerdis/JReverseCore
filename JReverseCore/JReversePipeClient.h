@@ -8,9 +8,22 @@
 #include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/managed_windows_shared_memory.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/containers/vector.hpp>
+#include <boost/interprocess/containers/string.hpp>
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/any/basic_any.hpp>
 #include "JReversePipeInfo.h"
 #include "JReversePipeHelper.h"
+
+// Alias for the allocator for strings in shared memory
+typedef boost::interprocess::allocator<char, boost::interprocess::managed_windows_shared_memory::segment_manager> CharAllocator;
+typedef boost::interprocess::basic_string<char, std::char_traits<char>, CharAllocator> ShmString;
+
+// Alias for the allocator for vector of strings in shared memory
+typedef boost::interprocess::allocator<ShmString, boost::interprocess::managed_windows_shared_memory::segment_manager> StringAllocator;
+typedef boost::interprocess::vector<ShmString, StringAllocator> ShmStringVector;
 
 template<typename T>
 class JReversePipeClient
@@ -24,7 +37,7 @@ public:
     void Disconnect();
 private:
     boost::interprocess::managed_windows_shared_memory shm;
-    boost::interprocess::mapped_region region;
+    void* address;
     size_t writtenSize;
     std::string name;
     boost::interprocess::mode_t mode;
@@ -40,11 +53,11 @@ inline JReversePipeClient<T>::JReversePipeClient(std::string Name, boost::interp
     //Create a native windows shared memory object.
     managed_windows_shared_memory ghm(open_only, Name.c_str());
 
-    //Map the whole shared memory in this process
-    mapped_region regionn(ghm, Mode);
+    //Map the whole shared memory in this process 
 
     ghm.swap(shm);
-    regionn.swap(region);
+
+    address = shm.get_address();
 
     writtenSize = sizeof(T);
 
@@ -53,15 +66,14 @@ inline JReversePipeClient<T>::JReversePipeClient(std::string Name, boost::interp
 template<typename T>
 inline void JReversePipeClient<T>::WritePipe(const T& data)
 {
-    if (sizeof(data) > region.get_size()) {
+    if (sizeof(data) > shm.get_size()) {
         throw std::exception("The data is to big for the region!");
     }
 
-    //writtenSize = sizeof(data);
+    boost::interprocess::interprocess_mutex* mutex = shm.find_or_construct<boost::interprocess::interprocess_mutex>("MUTEX")();
 
     if constexpr (std::is_same_v<T, std::vector<std::string>>) {
         std::vector<std::string> vec = data;
-        void* address = region.get_address();
 
         // Calculate the total size needed for the strings
         std::size_t totalSize = 0;
@@ -69,77 +81,97 @@ inline void JReversePipeClient<T>::WritePipe(const T& data)
             totalSize += str.size() + 1; // Include null terminator
         }
 
-        // Write the strings to the mapped region
-        char* ptr = static_cast<char*>(address);
+        auto* segment_manager = shm.get_segment_manager();
+
+        StringAllocator string_allocator(segment_manager);
+        ShmStringVector* shm_vector = shm.find_or_construct<ShmStringVector>("MAIN")(string_allocator);
+
+        mutex->lock();
+        shm_vector->clear();
+        std::cout << "Cleared Vector!" << std::endl;
+        //Cant put in this much data?
         for (const std::string& str : vec) {
-            std::size_t size = str.size();
-            std::memcpy(ptr, str.c_str(), size); // Copy the string data
-            ptr += size;
-            *ptr++ = '\0'; // Null terminate the string
+            ShmString shm_str(str.c_str(), string_allocator);
+            shm_vector->push_back(shm_str);
+            std::cout << "pushed back: " << str << std::endl;
         }
-        *ptr = '\0';
+        mutex->unlock();
         return;
     }
     else if constexpr (std::is_same_v<T, std::string>) {
-        std::string stt = data;
-        std::strcpy(static_cast<char*>(region.get_address()), stt.c_str());
+        std::string input = data;
+        auto* seg_man = shm.get_segment_manager();
+        CharAllocator char_allocator(seg_man);
+        ShmString* shm_string = shm.find_or_construct<ShmString>("MAIN")(char_allocator);
+        mutex->lock();
+        *shm_string = ShmString(input.c_str(), char_allocator);
+        mutex->unlock();
         return;
     }
-    std::memcpy(region.get_address(), &data, sizeof(T));
+    //Generic Copy
+    mutex->lock();
+    std::memcpy(address, &data, sizeof(T));
+    mutex->unlock();
 }
 
 template<typename T>
 inline T JReversePipeClient<T>::ReadPipe()
 {
-    if (region.get_address() == nullptr) {
+    if (shm.get_address() == nullptr) {
         throw std::exception("address was null");
     }
+
+    boost::interprocess::interprocess_mutex* mutex = shm.find_or_construct<boost::interprocess::interprocess_mutex>("MUTEX")();
+
     T data;
     if constexpr (std::is_same_v<T, std::vector<std::string>>) {
-        void* address = region.get_address();
-
         // Determine the size of the mapped data
-        std::size_t size = region.get_size();
-        std::vector<std::string> myStringVector;
+        std::size_t size = shm.get_size();
+        std::vector<std::string> result;
         try
         {
-            // Check if the mapped region is empty
+            // Check if the region is empty
             if (size == 0) {
-                std::runtime_error("Mapped region is empty.");
+                boost::interprocess::interprocess_exception("Region is empty.");
             }
 
-            // Read and deserialize the strings from the mapped region
-            std::vector<std::string> vec;
-            char* ptr = static_cast<char*>(address);
-            while (*ptr != '\0') { // Check for null terminator at the beginning of each string
-                // Find the null terminator
-                char* endPtr = std::strchr(ptr, '\0');
-                if (endPtr == nullptr) {
-                    // Null terminator not found within the mapped region
-                    std::runtime_error("Null terminator not found within the mapped region.");
+            // Find the vector in the shared memory
+            ShmStringVector* shm_vector = shm.find<ShmStringVector>("MAIN").first;
+            
+            mutex->lock();
+
+            if (shm_vector) {
+                for (const auto& shm_str : *shm_vector) {
+                    result.emplace_back(shm_str.c_str());
                 }
-
-                // Read the string and add it to the vector
-                std::string str(ptr, endPtr - ptr);
-                vec.push_back(str);
-                ptr = endPtr + 1; // Move to the next string (skip null terminator)
             }
-            myStringVector = vec;
+            else
+            {
+                result.push_back("NONE");
+            }
         }
-        catch (std::runtime_error e)
+        catch (boost::interprocess::interprocess_exception e)
         {
-            myStringVector.push_back(std::string(e.what()));
+            result.push_back(std::string(e.what()));
         }
-        data = myStringVector;
-
+        data = result;
     }
     else if constexpr (std::is_same_v <T, std::string>) {
-        return std::string(static_cast<const char*>(region.get_address()));
+        ShmString* shm_string = shm.find<ShmString>("MAIN").first;
+        mutex->lock();
+
+        if (shm_string) {
+            data = std::string(shm_string->c_str());
+        }
+        else {
+            data = "NONE";
+        }
     }
     else
     {
-        std::memcpy(&data, region.get_address(), sizeof(T));
+        std::memcpy(&data, shm.get_address(), sizeof(T));
     }
+    mutex->unlock();
     return data;
 }
 
@@ -148,7 +180,7 @@ inline JReversePipeInfo JReversePipeClient<T>::GetInfo()
 {
     JReversePipeInfo returnable;
     returnable.Name = std::string(name);
-    returnable.Size = region.get_size();
+    returnable.Size = shm.get_size();
     returnable.Mode = mode;
     return returnable;
 }
@@ -156,25 +188,19 @@ inline JReversePipeInfo JReversePipeClient<T>::GetInfo()
 template<typename T>
 inline void JReversePipeClient<T>::Reconnect()
 {
-    std::cout << "Old Address: " << region.get_address() << std::endl;
-    std::cout << "Old Size: " << region.get_size() << std::endl;
-    std::cout << "Old Mapping Handle: " << shm.get_address() << std::endl;
+    std::cout << "Old Address: " << shm.get_address() << std::endl;
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
     managed_windows_shared_memory ghm(open_only, name.c_str());
     
     std::cout << "New Connected Size: " << ghm.get_size() << std::endl;
-    std::cout << "New Mapping Handle: " << ghm.get_address().handle << std::endl;
-    
-
-    //Map the whole shared memory in this process
-    mapped_region regionn(ghm, mode);
+    std::cout << "New Mapping Handle: " << ghm.get_address() << std::endl;
 
     this->shm.swap(ghm);
-    this->region.swap(regionn);
+    this->address = shm.get_address();
 
-    std::cout << "New Address: " << region.get_address() << std::endl;
-    std::cout << "New Size: " << region.get_size() << std::endl;
+    std::cout << "New Address: " << shm.get_address() << std::endl;
+    std::cout << "New Size: " << shm.get_size() << std::endl;
 }
 
 template<typename T>

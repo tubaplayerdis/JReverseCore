@@ -288,6 +288,9 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
         Sleep(10);
         z++;
     }
+
+    logger.Log("Callback Recived!");
+
     std::vector<std::string> builda = PipeAPI::ReadReturnPipeAR();
 
     // Find the class of java.lang.String
