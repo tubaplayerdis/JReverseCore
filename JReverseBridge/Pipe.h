@@ -200,7 +200,7 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
 template<typename T>
 inline std::string JReversePipe<T>::Resize(int newSize)
 {
-    shm.allocate(newSize);
+    shm.grow(newSize);
     return "Sucsess!";
 }
 

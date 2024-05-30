@@ -194,6 +194,7 @@ inline JReversePipeInfo JReversePipeClient<T>::GetInfo()
 template<typename T>
 inline void JReversePipeClient<T>::Reconnect()
 {
+    /* No need
     //Delete later if causing instability as it is not needed but still "works"
     std::cout << "Old Address: " << shm.get_address() << std::endl;
     using namespace boost::interprocess;
@@ -208,6 +209,7 @@ inline void JReversePipeClient<T>::Reconnect()
 
     std::cout << "New Address: " << shm.get_address() << std::endl;
     std::cout << "New Size: " << shm.get_size() << std::endl;
+    */
 }
 
 template<typename T>
