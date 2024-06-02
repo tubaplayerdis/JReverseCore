@@ -789,7 +789,7 @@ void MainThread(HMODULE instance)
 
     std::printf("Starting Function Call Loop\n");
 
-    //system("cls");
+    system("cls");
 
     //This dosent work.
     std::cout << R"(      _ ____                               __     ___   ___  )" << std::endl;
@@ -812,7 +812,33 @@ void MainThread(HMODULE instance)
                 std::cout << "JReverse Console. Enter a Command: ";
                 std::string command;
                 std::cin >> command;
-                if (command == "RECONNECT") {
+                if (command == "INFO") {
+                    std::cout << "\nWhich Pipe? ";
+                    std::string pip;
+                    std::cin >> pip;
+                    std::cout << "\nINFO: " << pip << std::endl;
+                    JReversePipeInfo info;
+                    if (pip == "CriticalFunctionPipe") {
+                        info = PipeClientAPI::FunctionPipe.GetInfo();
+                    }
+                    else if (pip == "CriticalFunctionArgPipe") {
+                        info = PipeClientAPI::FunctionArgPipe.GetInfo();
+                    }
+                    else if (pip == "CriticalReturnPipe") {
+                        info = PipeClientAPI::ReturnPipe.GetInfo();
+                    }
+                    else if (pip == "CriticalPipeNamePipe") {
+                        info = PipeClientAPI::PipeNamePipe.GetInfo();
+                    }
+                    else if (pip == "CriticalStartupPipe") {
+                        info = PipeClientAPI::StartupPipe.GetInfo();
+                    }
+                    else if (pip == "CriticalSettingsPipe") {
+                        info = PipeClientAPI::SettingsPipe.GetInfo();
+                    }
+                    std::cout << "NAME: " << info.Name << std::endl << "SIZE: " << info.Size << std::endl << "MODE: " << info.Mode << std::endl;
+                }         
+                else if (command == "RECONNECT") {
                     std::cout << "\nWhich Pipe? ";
                     std::string pip;
                     std::cin >> pip;
@@ -836,28 +862,32 @@ void MainThread(HMODULE instance)
                         PipeClientAPI::SettingsPipe.Reconnect();
                     }
                 }
-
-                if (command == "DISCONNECT") {
+                else if (command == "DISCONNECT") {
                     std::cout << "\nWhich Pipe? ";
                     std::string pip;
                     std::cin >> pip;
-                    std::cout << "\nDISCONNECTING: " << pip << std::endl;
                     if (pip == "CriticalFunctionPipe") {
+                        std::cout << "\nDISCONNECTING: " << pip << std::endl;
                         PipeClientAPI::FunctionPipe.Disconnect();
                     }
                     else if (pip == "CriticalFunctionArgPipe") {
+                        std::cout << "\nDISCONNECTING: " << pip << std::endl;
                         PipeClientAPI::FunctionArgPipe.Disconnect();
                     }
                     else if (pip == "CriticalReturnPipe") {
+                        std::cout << "\nDISCONNECTING: " << pip << std::endl;
                         PipeClientAPI::ReturnPipe.Disconnect();
                     }
                     else if (pip == "CriticalPipeNamePipe") {
+                        std::cout << "\nDISCONNECTING: " << pip << std::endl;
                         PipeClientAPI::PipeNamePipe.Disconnect();
                     }
                     else if (pip == "CriticalStartupPipe") {
+                        std::cout << "\nDISCONNECTING: " << pip << std::endl;
                         PipeClientAPI::StartupPipe.Disconnect();
                     }
                     else if (pip == "CriticalSettingsPipe") {
+                        std::cout << "\nDISCONNECTING: " << pip << std::endl;
                         PipeClientAPI::SettingsPipe.Disconnect();
                     }
                 }
@@ -866,8 +896,8 @@ void MainThread(HMODULE instance)
 
                 std::cout << "Exiting JReverse Console..." << std::endl;
             }
-
-
+#pragma region CommPipeStuff
+            /*
             if (PipeClientAPI::CommunicationPipe.ReadPipe().find("RECONNECT") != std::string::npos) {
                 std::string command = PipeClientAPI::CommunicationPipe.ReadPipe();
                 std::string pip = command.substr(10);
@@ -917,6 +947,8 @@ void MainThread(HMODULE instance)
                 }
                 PipeClientAPI::CommunicationPipe.WritePipe("NONE");
             }
+            */
+#pragma endregion
 
             if (!PipeClientAPI::isFunctionPipeNone()) {
                 std::printf("Function Call Detected!\n");

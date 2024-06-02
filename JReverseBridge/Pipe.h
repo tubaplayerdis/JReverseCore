@@ -5,14 +5,15 @@
 #include <type_traits>
 #include <iterator>
 #include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/windows_shared_memory.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/managed_windows_shared_memory.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/containers/string.hpp>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#include <cassert>
 #include <boost/any/basic_any.hpp>
 #include "JReversePipeInfo.h"
 #include "JReversePipeHelper.h"
@@ -200,8 +201,20 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
 template<typename T>
 inline std::string JReversePipe<T>::Resize(int newSize)
 {
-    shm.grow(newSize);
-    return "Sucsess!";
+    int ogsize = shm.get_free_memory();
+    boost::interprocess::managed_shared_memory::size_type min_size = 100;
+    boost::interprocess::managed_shared_memory::size_type first_received_size = newSize;
+    std::size_t* hint = 0;
+    try {
+        std::size_t* ptr = shm.allocation_command<std::size_t>(boost::interprocess::allocate_new, min_size, first_received_size, hint);
+    }
+    catch (boost::interprocess::interprocess_exception e) {
+        return e.what();
+    }
+    //if (shm.get_free_memory() <= ogsize) return "Memory Allocation Failed! Size is the same or smaller!";
+    std::stringstream retr;
+    retr << "Hint: " << hint;
+    return retr.str().c_str();
 }
 
 

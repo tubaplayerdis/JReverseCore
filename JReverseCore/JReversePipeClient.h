@@ -194,9 +194,6 @@ inline JReversePipeInfo JReversePipeClient<T>::GetInfo()
 template<typename T>
 inline void JReversePipeClient<T>::Reconnect()
 {
-    /* No need
-    //Delete later if causing instability as it is not needed but still "works"
-    std::cout << "Old Address: " << shm.get_address() << std::endl;
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
     managed_windows_shared_memory ghm(open_only, name.c_str());
@@ -204,18 +201,23 @@ inline void JReversePipeClient<T>::Reconnect()
     std::cout << "New Connected Size: " << ghm.get_size() << std::endl;
     std::cout << "New Mapping Handle: " << ghm.get_address() << std::endl;
 
-    this->shm.swap(ghm);
-    this->address = shm.get_address();
+    ghm.swap(shm);
+    address = shm.get_address();
 
     std::cout << "New Address: " << shm.get_address() << std::endl;
     std::cout << "New Size: " << shm.get_size() << std::endl;
-    */
 }
 
 template<typename T>
 inline void JReversePipeClient<T>::Disconnect()
 {
-    //Dont use this.
+    if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+        shm.destroy<ShmStringVector>("MAIN");
+    }
+    else if constexpr (std::is_same_v<T, std::string>) {
+        shm.destroy<ShmString>("MAIN");
+    }
+    shm.~basic_managed_windows_shared_memory();
 }
 
 
