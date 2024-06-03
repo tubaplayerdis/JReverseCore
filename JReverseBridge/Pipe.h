@@ -25,6 +25,7 @@ typedef boost::interprocess::basic_string<char, std::char_traits<char>, CharAllo
 typedef boost::interprocess::allocator<ShmString, boost::interprocess::managed_shared_memory::segment_manager> StringAllocator;
 typedef boost::interprocess::vector<ShmString, StringAllocator> ShmStringVector;
 
+
 template<typename T>
 class JReversePipe
 {
@@ -33,7 +34,8 @@ public:
     void WritePipe(const T& data);
     T ReadPipe();
     JReversePipeInfo GetInfo();
-    void Grow(int size);
+    void Grow(long long int size);
+    void Reload(long long int size);
     void Free();
 private:
     boost::interprocess::managed_shared_memory shm;
@@ -180,7 +182,7 @@ inline T JReversePipe<T>::ReadPipe()
         }
     }
     else
-    {       
+    {   
         std::memcpy(&data, shm.get_address(), sizeof(T));
     }
 
@@ -193,21 +195,36 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
 {
     JReversePipeInfo returnable;
     returnable.Name = std::string(name);
-    returnable.Size = shm.get_size();
-    returnable.Mode = mode;
+    returnable.Size = (long long int)(shm.get_size());
+    returnable.FreeMemory = (long long int)(shm.get_free_memory());
     return returnable;
 }
 
 template<typename T>
-inline void JReversePipe<T>::Grow(int size)
+inline void JReversePipe<T>::Grow(long long int size)
 {
     boost::interprocess::managed_shared_memory::grow(name.c_str(), size);
+}
+
+/*
+* SEND A DISCONNECT COMMAND AND THEN RECONNECT COMMAND BEFORE USING
+*/
+template<typename T>
+inline void JReversePipe<T>::Reload(long long int size)
+{
+    T currentdata = ReadPipe();
+    boost::interprocess::shared_memory_object::remove(name.c_str());
+    using namespace boost::interprocess;
+    managed_shared_memory ghm(open_or_create, name.c_str(), size);
+    ghm.swap(shm);
+    address = shm.get_address();
+    WritePipe(currentdata);
 }
 
 template<typename T>
 inline void JReversePipe<T>::Free()
 {
-    boost::interprocess::managed_shared_memory::destroy(name.c_str());
+    boost::interprocess::shared_memory_object::remove(name.c_str());
 }
 
 

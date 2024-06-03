@@ -53,7 +53,15 @@ extern "C" {
 	 * Signature: (Ljava/lang/String;I)V
 	 */
 	JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_ResizeAndReconnectPipe
-	(JNIEnv*, jclass, jstring, jint);
+	(JNIEnv*, jclass, jstring, jlong);
+
+	/*
+	 * Class:     com_jreverse_jreverse_PipeManager_PipeManager
+	 * Method:    GrowPipe
+	 * Signature: (Ljava/lang/String;J)V
+	 */
+	JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_GrowPipe
+	(JNIEnv*, jclass, jstring, jlong);
 
 #ifdef __cplusplus
 }

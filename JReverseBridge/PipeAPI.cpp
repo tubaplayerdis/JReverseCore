@@ -54,14 +54,14 @@ std::vector<std::string> PipeAPI::GetAllPipeNames()
 JReversePipeInfo PipeAPI::GetPipeInfo(std::string name)
 {
     JReversePipeInfo defsend;
-    defsend.Mode = boost::interprocess::invalid_mode;
+    defsend.FreeMemory = 0;
     defsend.Name = "null";
     defsend.Size = 0;
     if (name == "CriticalFunctionPipe") return PipeAPI::FunctionPipe.GetInfo();
-    else if (name == "CriticalFunctionArgPipe") return PipeAPI::FunctionPipe.GetInfo();
-    else if (name == "CriticalReturnPipe") return PipeAPI::FunctionPipe.GetInfo();
-    else if (name == "CriticalPipeNamePipe") return PipeAPI::FunctionPipe.GetInfo();
-    else if (name == "CriticalCommunicationPipe") return PipeAPI::FunctionPipe.GetInfo();
+    else if (name == "CriticalFunctionArgPipe") return PipeAPI::FunctionArgPipe.GetInfo();
+    else if (name == "CriticalReturnPipe") return PipeAPI::ReturnPipe.GetInfo();
+    else if (name == "CriticalPipeNamePipe") return PipeAPI::PipeNamePipe.GetInfo();
+    else if (name == "CriticalCommunicationPipe") return PipeAPI::CommunicationPipe.GetInfo();
     else return defsend;
 }
 
@@ -96,11 +96,34 @@ void PipeAPI::AddPipeToList(std::string name)
     PipeAPI::PipeNamePipe.WritePipe(cur);
 }
 
-void PipeAPI::ResizePipe(std::string name, int size, JNIEnv* env)
+void PipeAPI::ReloadPipe(std::string name, long long int size, JNIEnv* env)
 {
     JReverseLogger logger = JReverseLogger(env);
-    logger.Log("Resizing: " + name);
-    std::string cb;
+    logger.Log("Reloading: " + name);
+    if (name == "CriticalFunctionPipe") {
+        PipeAPI::FunctionPipe.Reload(size);
+    }
+    else if (name == "CriticalFunctionArgPipe") {
+        PipeAPI::FunctionArgPipe.Reload(size);
+    }
+    else if (name == "CriticalReturnPipe") {
+        PipeAPI::ReturnPipe.Reload(size);
+    }
+    else if (name == "CriticalPipeNamePipe") {
+        PipeAPI::PipeNamePipe.Reload(size);
+    }
+    else if (name == "CriticalStartupPipe") {
+        PipeAPI::StartupRulesPipe.Reload(size);
+    }
+    else if (name == "CriticalSettingsPipe") {
+        PipeAPI::SettingsPipe.Reload(size);
+    }
+}
+
+void PipeAPI::GrowPipe(std::string name, long long int size, JNIEnv* env)
+{
+    JReverseLogger logger = JReverseLogger(env);
+    logger.Log("Growing: " + name);
     if (name == "CriticalFunctionPipe") {
         PipeAPI::FunctionPipe.Grow(size);
     }
@@ -119,7 +142,6 @@ void PipeAPI::ResizePipe(std::string name, int size, JNIEnv* env)
     else if (name == "CriticalSettingsPipe") {
         PipeAPI::SettingsPipe.Grow(size);
     }
-    logger.Log("Reized Pipe Callback: "+cb);
 }
 
 std::vector<std::string> PipeAPI::ReadReturnPipeAR()

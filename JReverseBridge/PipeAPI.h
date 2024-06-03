@@ -22,7 +22,8 @@ public:
     static bool CheckForPipe(std::string name);
     static std::string GetPipeType(std::string name);
     static void AddPipeToList(std::string name);
-    static void ResizePipe(std::string name, int size, JNIEnv* env);
+    static void ReloadPipe(std::string name, long long int size, JNIEnv* env);
+    static void GrowPipe(std::string name, long long int size, JNIEnv* env);
     static std::vector<std::string> ReadReturnPipeAR();
     //Critical Pipes
     static JReversePipe<std::string> FunctionPipe;

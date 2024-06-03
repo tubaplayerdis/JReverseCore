@@ -73,14 +73,14 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManage
     // Create an empty array of strings
     jobjectArray stringArray = env->NewObjectArray(3, stringClass, NULL);
 
-    jstring string1 = env->NewStringUTF("read/write");
-    env->SetObjectArrayElement(stringArray, 0, string1);
-
     jstring string2 = env->NewStringUTF(pipinfo.Name.c_str());
-    env->SetObjectArrayElement(stringArray, 1, string2);
+    env->SetObjectArrayElement(stringArray, 0, string2);
 
     jstring string3 = env->NewStringUTF(std::to_string(pipinfo.Size).c_str());
-    env->SetObjectArrayElement(stringArray, 2, string3);
+    env->SetObjectArrayElement(stringArray, 1, string3);
+
+    jstring string1 = env->NewStringUTF(std::to_string(pipinfo.FreeMemory).c_str());
+    env->SetObjectArrayElement(stringArray, 2, string1);
 
     return stringArray;
 }
@@ -115,7 +115,13 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_Remove
     return;
 }
 
-JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_ResizeAndReconnectPipe(JNIEnv* env, jclass, jstring name, jint size)
+JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_GrowPipe(JNIEnv* env, jclass, jstring name, jlong size)
+{
+    const char* pip = env->GetStringUTFChars(name, NULL);
+    PipeAPI::GrowPipe(pip, size, env);
+}
+
+JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_ResizeAndReconnectPipe(JNIEnv* env, jclass, jstring name, jlong size)
 {
     JReverseLogger logger = JReverseLogger(env);
     std::stringstream recname;
@@ -128,7 +134,7 @@ JNIEXPORT void JNICALL Java_com_jreverse_jreverse_PipeManager_PipeManager_Resize
     PipeAPI::CommunicationPipe.WritePipe(discommand);
     logger.Log("Logged Disconnect Command!");
     Sleep(100);
-    PipeAPI::ResizePipe(pip, size, env);
+    PipeAPI::ReloadPipe(pip, size, env);
     logger.Log("Resized Pipe!");
     PipeAPI::CommunicationPipe.WritePipe(command);
 }

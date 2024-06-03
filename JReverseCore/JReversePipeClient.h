@@ -254,7 +254,7 @@ template<typename T>
 inline void JReversePipeClient<T>::Free()
 {
     blocked = true;
-    boost::interprocess::managed_shared_memory::destroy(name.c_str());
+    boost::interprocess::shared_memory_object::remove(name.c_str());
 }
 
 
