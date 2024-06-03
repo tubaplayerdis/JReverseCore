@@ -811,11 +811,12 @@ void MainThread(HMODULE instance)
                 std::cout << "----------------------------------------------" << std::endl;
                 std::cout << "JReverse Console. Enter a Command: ";
                 std::string command;
-                std::cin >> command;
+                std::string pip;
+                std::string input;
+                std::cin >> input;
+                command = input.substr(0, input.find_first_of(" "));
+                pip = input.substr(input.find_first_of(" ")+1);
                 if (command == "INFO") {
-                    std::cout << "\nWhich Pipe? ";
-                    std::string pip;
-                    std::cin >> pip;
                     std::cout << "\nINFO: " << pip << std::endl;
                     JReversePipeInfo info;
                     if (pip == "CriticalFunctionPipe") {
@@ -839,9 +840,6 @@ void MainThread(HMODULE instance)
                     std::cout << "NAME: " << info.Name << std::endl << "SIZE: " << info.Size << std::endl << "MODE: " << info.Mode << std::endl;
                 }         
                 else if (command == "RECONNECT") {
-                    std::cout << "\nWhich Pipe? ";
-                    std::string pip;
-                    std::cin >> pip;
                     std::cout << "\nRECONNECTING: " << pip << std::endl;
                     if (pip == "CriticalFunctionPipe") {
                         PipeClientAPI::FunctionPipe.Reconnect();
@@ -863,9 +861,6 @@ void MainThread(HMODULE instance)
                     }
                 }
                 else if (command == "DISCONNECT") {
-                    std::cout << "\nWhich Pipe? ";
-                    std::string pip;
-                    std::cin >> pip;
                     if (pip == "CriticalFunctionPipe") {
                         std::cout << "\nDISCONNECTING: " << pip << std::endl;
                         PipeClientAPI::FunctionPipe.Disconnect();
@@ -890,6 +885,51 @@ void MainThread(HMODULE instance)
                         std::cout << "\nDISCONNECTING: " << pip << std::endl;
                         PipeClientAPI::SettingsPipe.Disconnect();
                     }
+                }
+                else if (command == "BLOCK") {
+                    std::cout << "\nBLOCK: " << pip << std::endl;
+                    if (pip == "CriticalFunctionPipe") {
+                        PipeClientAPI::FunctionPipe.SetBlock(true);
+                    }
+                    else if (pip == "CriticalFunctionArgPipe") {
+                        PipeClientAPI::FunctionArgPipe.SetBlock(true);
+                    }
+                    else if (pip == "CriticalReturnPipe") {
+                        PipeClientAPI::ReturnPipe.SetBlock(true);
+                    }
+                    else if (pip == "CriticalPipeNamePipe") {
+                        PipeClientAPI::PipeNamePipe.SetBlock(true);
+                    }
+                    else if (pip == "CriticalStartupPipe") {
+                        PipeClientAPI::StartupPipe.SetBlock(true);
+                    }
+                    else if (pip == "CriticalSettingsPipe") {
+                        PipeClientAPI::SettingsPipe.SetBlock(true);
+                    }
+                }
+                else if (command == "GROW") {
+                    std::cout << "\nBLOCK: " << pip << std::endl;
+                    if (pip == "CriticalFunctionPipe") {
+                        PipeClientAPI::FunctionPipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalFunctionArgPipe") {
+                        PipeClientAPI::FunctionArgPipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalReturnPipe") {
+                        PipeClientAPI::ReturnPipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalPipeNamePipe") {
+                        PipeClientAPI::PipeNamePipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalStartupPipe") {
+                        PipeClientAPI::StartupPipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalSettingsPipe") {
+                        PipeClientAPI::SettingsPipe.SetBlock(false);
+                    }
+                }
+                else if (command == "FREE") {
+
                 }
 
                 JReverseStartupSettings::isClassFileLoadMessages = restore;

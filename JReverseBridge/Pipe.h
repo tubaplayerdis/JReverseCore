@@ -5,7 +5,6 @@
 #include <type_traits>
 #include <iterator>
 #include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/managed_windows_shared_memory.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
@@ -19,11 +18,11 @@
 #include "JReversePipeHelper.h"
 
 // Alias for the allocator for strings in shared memory
-typedef boost::interprocess::allocator<char, boost::interprocess::managed_windows_shared_memory::segment_manager> CharAllocator;
+typedef boost::interprocess::allocator<char, boost::interprocess::managed_shared_memory::segment_manager> CharAllocator;
 typedef boost::interprocess::basic_string<char, std::char_traits<char>, CharAllocator> ShmString;
 
 // Alias for the allocator for vector of strings in shared memory
-typedef boost::interprocess::allocator<ShmString, boost::interprocess::managed_windows_shared_memory::segment_manager> StringAllocator;
+typedef boost::interprocess::allocator<ShmString, boost::interprocess::managed_shared_memory::segment_manager> StringAllocator;
 typedef boost::interprocess::vector<ShmString, StringAllocator> ShmStringVector;
 
 template<typename T>
@@ -34,9 +33,10 @@ public:
     void WritePipe(const T& data);
     T ReadPipe();
     JReversePipeInfo GetInfo();
-    std::string Resize(int newSize);
+    void Grow(int size);
+    void Free();
 private:
-    boost::interprocess::managed_windows_shared_memory shm;
+    boost::interprocess::managed_shared_memory shm;
     void* address;
     size_t writtenSize;
     std::string name;
@@ -52,7 +52,7 @@ inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode
     using namespace boost::interprocess;
 
     //Create a native windows shared memory object.
-    managed_windows_shared_memory ghm(create_only, Name.c_str(), Size);
+    managed_shared_memory ghm(open_or_create, Name.c_str(), Size);
 
     ghm.swap(shm);
     address = shm.get_address();
@@ -199,22 +199,15 @@ inline JReversePipeInfo JReversePipe<T>::GetInfo()
 }
 
 template<typename T>
-inline std::string JReversePipe<T>::Resize(int newSize)
+inline void JReversePipe<T>::Grow(int size)
 {
-    int ogsize = shm.get_free_memory();
-    boost::interprocess::managed_shared_memory::size_type min_size = 100;
-    boost::interprocess::managed_shared_memory::size_type first_received_size = newSize;
-    std::size_t* hint = 0;
-    try {
-        std::size_t* ptr = shm.allocation_command<std::size_t>(boost::interprocess::allocate_new, min_size, first_received_size, hint);
-    }
-    catch (boost::interprocess::interprocess_exception e) {
-        return e.what();
-    }
-    //if (shm.get_free_memory() <= ogsize) return "Memory Allocation Failed! Size is the same or smaller!";
-    std::stringstream retr;
-    retr << "Hint: " << hint;
-    return retr.str().c_str();
+    boost::interprocess::managed_shared_memory::grow(name.c_str(), size);
+}
+
+template<typename T>
+inline void JReversePipe<T>::Free()
+{
+    boost::interprocess::managed_shared_memory::destroy(name.c_str());
 }
 
 

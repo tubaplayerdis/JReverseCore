@@ -102,22 +102,22 @@ void PipeAPI::ResizePipe(std::string name, int size, JNIEnv* env)
     logger.Log("Resizing: " + name);
     std::string cb;
     if (name == "CriticalFunctionPipe") {
-        cb = PipeAPI::FunctionPipe.Resize(size);
+        PipeAPI::FunctionPipe.Grow(size);
     }
     else if (name == "CriticalFunctionArgPipe") {
-        cb = PipeAPI::FunctionArgPipe.Resize(size);
+        PipeAPI::FunctionArgPipe.Grow(size);
     }
     else if (name == "CriticalReturnPipe") {
-        cb = PipeAPI::ReturnPipe.Resize(size);
+        PipeAPI::ReturnPipe.Grow(size);
     }
     else if (name == "CriticalPipeNamePipe") {
-        cb = PipeAPI::PipeNamePipe.Resize(size);
+        PipeAPI::PipeNamePipe.Grow(size);
     }
     else if (name == "CriticalStartupPipe") {
-        cb = PipeAPI::StartupRulesPipe.Resize(size);
+        PipeAPI::StartupRulesPipe.Grow(size);
     }
     else if (name == "CriticalSettingsPipe") {
-        cb = PipeAPI::SettingsPipe.Resize(size);
+        PipeAPI::SettingsPipe.Grow(size);
     }
     logger.Log("Reized Pipe Callback: "+cb);
 }

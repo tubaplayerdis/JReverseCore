@@ -5,9 +5,8 @@
 #include <algorithm>
 #include <iterator>
 #include <iostream>
-#include <boost/interprocess/windows_shared_memory.hpp>
 #include <boost/interprocess/mapped_region.hpp>
-#include <boost/interprocess/managed_windows_shared_memory.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/containers/string.hpp>
@@ -18,11 +17,11 @@
 #include "JReversePipeHelper.h"
 
 // Alias for the allocator for strings in shared memory
-typedef boost::interprocess::allocator<char, boost::interprocess::managed_windows_shared_memory::segment_manager> CharAllocator;
+typedef boost::interprocess::allocator<char, boost::interprocess::managed_shared_memory::segment_manager> CharAllocator;
 typedef boost::interprocess::basic_string<char, std::char_traits<char>, CharAllocator> ShmString;
 
 // Alias for the allocator for vector of strings in shared memory
-typedef boost::interprocess::allocator<ShmString, boost::interprocess::managed_windows_shared_memory::segment_manager> StringAllocator;
+typedef boost::interprocess::allocator<ShmString, boost::interprocess::managed_shared_memory::segment_manager> StringAllocator;
 typedef boost::interprocess::vector<ShmString, StringAllocator> ShmStringVector;
 
 template<typename T>
@@ -33,10 +32,14 @@ public:
     void WritePipe(const T& data);
     T ReadPipe();
     JReversePipeInfo GetInfo();
+    void SetBlock(bool status);
     void Reconnect();
     void Disconnect();
+    void Grow(int size);
+    void Free();
 private:
-    boost::interprocess::managed_windows_shared_memory shm;
+    bool blocked;
+    boost::interprocess::managed_shared_memory shm;
     void* address;
     size_t writtenSize;
     std::string name;
@@ -51,19 +54,24 @@ inline JReversePipeClient<T>::JReversePipeClient(std::string Name, boost::interp
     mode = Mode;
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
-    managed_windows_shared_memory ghm(open_only, Name.c_str());
+    managed_shared_memory ghm(open_only, Name.c_str());
 
     ghm.swap(shm);
 
     address = shm.get_address();
 
     writtenSize = sizeof(T);
-
+    blocked = false;
 }
 
 template<typename T>
 inline void JReversePipeClient<T>::WritePipe(const T& data)
 {
+    if (blocked) {
+        std::cout << "Cannot Write! Pipe is blocked!" << std::endl;
+        return;
+    }
+
     if (sizeof(data) > shm.get_size()) {
         throw std::exception("The data is to big for the region!");
     }
@@ -131,6 +139,10 @@ inline T JReversePipeClient<T>::ReadPipe()
 
     T data;
     if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+        if (blocked) {
+            std::cout << "Cannot Read! Pipe is blocked!" << std::endl;
+            return std::vector<std::string>{"NONE"};
+        }
         // Determine the size of the mapped data
         std::size_t size = shm.get_size();
         std::vector<std::string> result;
@@ -163,6 +175,10 @@ inline T JReversePipeClient<T>::ReadPipe()
         data = result;
     }
     else if constexpr (std::is_same_v <T, std::string>) {
+        if (blocked) {
+            std::cout << "Cannot Read! Pipe is blocked!" << std::endl;
+            return "NONE";
+        }
         ShmString* shm_string = shm.find<ShmString>("MAIN").first;
         mutex->lock();
 
@@ -192,11 +208,17 @@ inline JReversePipeInfo JReversePipeClient<T>::GetInfo()
 }
 
 template<typename T>
+inline void JReversePipeClient<T>::SetBlock(bool status)
+{
+    blocked = status;
+}
+
+template<typename T>
 inline void JReversePipeClient<T>::Reconnect()
 {
     using namespace boost::interprocess;
     //Create a native windows shared memory object.
-    managed_windows_shared_memory ghm(open_only, name.c_str());
+    managed_shared_memory ghm(open_only, name.c_str());
     
     std::cout << "New Connected Size: " << ghm.get_size() << std::endl;
     std::cout << "New Mapping Handle: " << ghm.get_address() << std::endl;
@@ -217,7 +239,22 @@ inline void JReversePipeClient<T>::Disconnect()
     else if constexpr (std::is_same_v<T, std::string>) {
         shm.destroy<ShmString>("MAIN");
     }
-    shm.~basic_managed_windows_shared_memory();
+    shm.~basic_managed_shared_memory();
+}
+
+template<typename T>
+inline void JReversePipeClient<T>::Grow(int size)
+{
+    blocked = true;
+    boost::interprocess::managed_shared_memory::grow(name.c_str(), size);
+    blocked = false;
+}
+
+template<typename T>
+inline void JReversePipeClient<T>::Free()
+{
+    blocked = true;
+    boost::interprocess::managed_shared_memory::destroy(name.c_str());
 }
 
 
