@@ -789,6 +789,7 @@ void MainThread(HMODULE instance)
 
     std::printf("Starting Function Call Loop\n");
 
+    /*
     system("cls");
 
     //This dosent work.
@@ -798,6 +799,7 @@ void MainThread(HMODULE instance)
     std::cout << R"( | |_| |  _ <  __/\ V /  __/ |  \__ \  __/   \ V / | || |_| |)" << std::endl;
     std::cout << R"(  \___/|_| \_\___| \_/ \___|_|  |___/\___|    \_/  |_(_)___/ )" << std::endl;
     std::cout << R"(                                                             )" << std::endl;
+    */
 
     //https://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=JReverse%20V1.0
     //FONT: ANSI Shadow, everything else defualt.
@@ -814,9 +816,20 @@ void MainThread(HMODULE instance)
                 std::string pip;
                 std::string input;
                 std::cin >> input;
-                command = input.substr(0, input.find_first_of(" "));
-                pip = input.substr(input.find_first_of(" ")+1);
-                if (command == "INFO") {
+
+                if (input.find(" ") == std::string::npos) {
+                    command = input;
+                    pip = "NONE";
+                }
+                else {
+                    command = input.substr(0, input.find_first_of(" "));
+                    pip = input.substr(input.find_first_of(" ") + 1);
+                }
+                if (command == "HELP") {
+                    std::cout << "How to use commands: Type the command and then the pipe to use. Some commands dont require the input of a pipe." << "\nExample: INFO CriticalReturnPipe" << std::endl;
+                    std::cout << "\nCommmands and Description: \nHELP - Displays Help. NO PIPE\nINFO - Displays info about a pipe\nRECONNECT - Reconnects local refrence to shared memory\nDISCONNECT - Disconnects and destorys local refrence to shared memory\nBLOCK - Blocks outgoing read/writes to a pipe\nGROW - Increase the size of a pipe by a given amount\nGUI - Display JReverse Target Swing UI. NO PIPE" << std::endl;
+                }
+                else if (command == "INFO") {
                     std::cout << "\nINFO: " << pip << std::endl;
                     JReversePipeInfo info;
                     if (pip == "CriticalFunctionPipe") {
@@ -907,6 +920,27 @@ void MainThread(HMODULE instance)
                         PipeClientAPI::SettingsPipe.SetBlock(true);
                     }
                 }
+                else if (command == "UNBLOCK") {
+                    std::cout << "\nUNBLOCK: " << pip << std::endl;
+                    if (pip == "CriticalFunctionPipe") {
+                        PipeClientAPI::FunctionPipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalFunctionArgPipe") {
+                        PipeClientAPI::FunctionArgPipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalReturnPipe") {
+                        PipeClientAPI::ReturnPipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalPipeNamePipe") {
+                        PipeClientAPI::PipeNamePipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalStartupPipe") {
+                        PipeClientAPI::StartupPipe.SetBlock(false);
+                    }
+                    else if (pip == "CriticalSettingsPipe") {
+                        PipeClientAPI::SettingsPipe.SetBlock(false);
+                    }
+                }
                 else if (command == "GROW") {
                     std::cout << "\nBLOCK: " << pip << std::endl;
                     if (pip == "CriticalFunctionPipe") {
@@ -929,7 +963,10 @@ void MainThread(HMODULE instance)
                     }
                 }
                 else if (command == "FREE") {
-
+                    std::cout << "FREE Can only be used from JReverse" << std::endl;
+                }
+                else if (command == "GUI") {
+                    std::cout << "GUI is still in development!" << std::endl;
                 }
 
                 JReverseStartupSettings::isClassFileLoadMessages = restore;

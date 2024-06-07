@@ -6,6 +6,6 @@
 struct JReversePipeInfo
 {
     std::string Name;
-    int Size;
+    long long int Size;
     boost::interprocess::mode_t Mode;
 };
