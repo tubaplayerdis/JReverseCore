@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 class JReverseStartupSettings
 {
@@ -9,5 +10,6 @@ public:
 	static bool isConsoleWindow;
 	static int funcLoopTimeout;
 	static int JNIEnvTiemout;
-
+	static bool isDynamicClassFileCollection;
+	static std::string DynamicClassFileCollectionPath;
 };

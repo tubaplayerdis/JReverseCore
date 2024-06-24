@@ -1,4 +1,4 @@
-﻿// dllmain.cpp : Defines the entry point for the DLL application.
+// dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include <windows.h>
 #include <jni.h>
@@ -26,7 +26,6 @@
 #include "JythonInterpreter.h"
 #include "StartupRule.h"
 #include "JReverseSettings.h"
-#include "DynamicCollector.h"
 
 
 
@@ -48,7 +47,7 @@ const char* CheckJNIError(JNIEnv* jniEnv) {
     jthrowable ex = nullptr;
     if (jniEnv->ExceptionCheck()) { std::cout << "A JVM EXEPTION WAS FOUND!" << std::endl; ex = jniEnv->ExceptionOccurred(); }
     if (ex == nullptr) return "No Error";
-    
+
     jclass exceptionClass = jniEnv->GetObjectClass(ex);
 
     // Get the method ID of the getMessage() method of Throwable
@@ -281,7 +280,7 @@ std::vector<unsigned char> readClassFile(const char* filename) {
     std::cout << "Check existance of file: " << filename << std::endl;
 
     if (!std::filesystem::exists(filename)) {
-        std::cout << "File Does Not Exist With Read Class File!" <<std::endl;
+        std::cout << "File Does Not Exist With Read Class File!" << std::endl;
         return {};
     }
 
@@ -301,8 +300,8 @@ std::vector<unsigned char> readClassFile(const char* filename) {
     }
 
     return buffer;
-    
-    
+
+
 }
 
 
@@ -313,24 +312,24 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
     //Verify Data
     if (class_data_len <= 0 || class_data == nullptr) {
         // Invalid arguments, log an error and return
-        if(JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Invalid Class, Abandoning" << std::endl;
+        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "\033[34mInvalid Class, Abandoning\033[0m" << std::endl;
         return;
     }
 
     if (class_being_redefined == nullptr) {
-        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "New Class Load" << std::endl;
+        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "\033[34mNew Class Load\033[0m" << std::endl;
     }
     else {
-        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Class Redefenition" << std::endl;
+        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "\033[34mClass Redefenition\033[0m" << std::endl;
     }
 
     if (name == nullptr) {
-        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Name is NULL. Sending to Unresolved" << std::endl;
+        if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "\033[34mName is NULL. Sending to Unresolved\033[0m" << std::endl;
         name = "unknown";
     }
 
     // Perform actions when a class file is loaded
-    if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Loading Class: " << name << std::endl;
+    if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "\033[34mLoading Class: \033[0m" << name << std::endl;
 
     for (int i = 0; i < JReverseStore::ruleslist.size(); i++)
     {
@@ -364,7 +363,7 @@ void JNICALL ClassFileLoadHook(jvmtiEnv* jvmti_env, JNIEnv* jni_env, jclass clas
             JReverseStore::bypassRules.push_back(JReverseStore::ruleslist[i]);//Add to bypass rules
             if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "\033[34mBypass Rule Detected!\033[0m" << std::endl;
             JReverseStore::ruleslist.erase(JReverseStore::ruleslist.begin() + i);//Remove the rule list
-        } 
+        }
     }
 
     // Print the bytecode of the loaded class
@@ -464,8 +463,8 @@ std::vector<std::string> getClassMethods(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::s
     std::printf("\n");
 
 
-    std::vector<std::string> StaticVec = {" ","STATIC:"," "};
-    std::vector<std::string> NonStaticVec = {" ","NON STATIC:"," "};
+    std::vector<std::string> StaticVec = { " ","STATIC:"," " };
+    std::vector<std::string> NonStaticVec = { " ","NON STATIC:"," " };
     for (int t = 0; t < mcount; t++) {
         jint modifier;
         TIenv->GetMethodModifiers(meths[t], &modifier);
@@ -518,13 +517,13 @@ std::vector<std::string> getClassFields(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::st
     std::printf("\n");
 
 
-    std::vector<std::string> StaticVec = {" ","STATIC:"," "};
-    std::vector<std::string> NonStaticVec = {" ","NON STATIC:"," "};
+    std::vector<std::string> StaticVec = { " ","STATIC:"," " };
+    std::vector<std::string> NonStaticVec = { " ","NON STATIC:"," " };
     for (int t = 0; t < fcount; t++) {
         std::string modi;
         jint modifier;
-        TIenv->GetFieldModifiers(cladd,feths[t], &modifier);
-        if ((modifier & 0x0008) != 0) 
+        TIenv->GetFieldModifiers(cladd, feths[t], &modifier);
+        if ((modifier & 0x0008) != 0)
         {
             char* nameoffeth;
             char* fethsig;
@@ -535,7 +534,7 @@ std::vector<std::string> getClassFields(jvmtiEnv* TIenv, JNIEnv* jniEnv, std::st
             TIenv->Deallocate((unsigned char*)fethsig);
             StaticVec.push_back(namef + " : " + namev);
         }
-        else 
+        else
         {
             char* nameoffeth;
             char* fethsig;
@@ -587,7 +586,7 @@ std::vector<std::string> getMethodBytecodes(jvmtiEnv* TIenv, JNIEnv* jniEnv, std
         bytecodeString << std::hex << std::stoi(std::to_string(bytecodes[i]));
         //bytecodeString << " ";
     }
-    
+
 
     TIenv->Deallocate((unsigned char*)bytecodes);
 
@@ -596,7 +595,7 @@ std::vector<std::string> getMethodBytecodes(jvmtiEnv* TIenv, JNIEnv* jniEnv, std
 
 void add_path(JNIEnv* env, const std::string& path)
 {
-    const std::string urlPath = "file:/"+path;
+    const std::string urlPath = "file:/" + path;
     jclass classLoaderCls = env->FindClass("java/lang/ClassLoader");
     jmethodID getSystemClassLoaderMethod = env->GetStaticMethodID(classLoaderCls, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
     jobject classLoaderInstance = env->CallStaticObjectMethod(classLoaderCls, getSystemClassLoaderMethod);
@@ -765,9 +764,6 @@ void MainThread(HMODULE instance)
 
     std::printf("Enabeld Class file load hooks\n");
 
-    DynamicCollector::init(JReverseStartupSettings::DynamicClassFileCollectionPath);
-
-
     JReverseStore::jvmtienv = TIenv;
 
 
@@ -779,7 +775,7 @@ void MainThread(HMODULE instance)
     std::cout << "TO init Function Call Loop: " << std::endl;
     Sleep(JReverseStartupSettings::funcLoopTimeout);
 
-    
+
 
     //Create Scripting StringWriter!
     jclass stringWriterClass = nullptr;
@@ -811,7 +807,7 @@ void MainThread(HMODULE instance)
     while (true) {
 
         while (true) {
-            if (GetAsyncKeyState(VK_OEM_3) & 0x01) {
+            if (GetAsyncKeyState(VK_F12) & 0x01) {
                 bool restore = JReverseStartupSettings::isClassFileLoadMessages;
                 JReverseStartupSettings::isClassFileLoadMessages = false;
                 std::cout << "----------------------------------------------" << std::endl;
@@ -855,7 +851,7 @@ void MainThread(HMODULE instance)
                         info = PipeClientAPI::SettingsPipe.GetInfo();
                     }
                     std::cout << "NAME: " << info.Name << std::endl << "SIZE: " << info.Size << std::endl << "MODE: " << info.Mode << std::endl;
-                }         
+                }
                 else if (command == "RECONNECT") {
                     std::cout << "\nRECONNECTING: " << pip << std::endl;
                     if (pip == "CriticalFunctionPipe") {
@@ -1083,7 +1079,7 @@ void MainThread(HMODULE instance)
         std::string called = PipeClientAPI::ReadFunctionPipeAR();
         std::vector<std::string> args = PipeClientAPI::ReadFunctionArgPipeAR();
         if (called == "TESTFUNC") {
-            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function Pipe OK", "Return Pipe OK"});
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Hello", "World"});
         }
         else if (called == "getLoadedClasses") {
             std::vector<std::string> sus = getLoadedClassesSignatures(TIenv, jniEnv);
@@ -1168,7 +1164,7 @@ void MainThread(HMODULE instance)
             curer = TIenv->GetClassStatus(clazz, &statusint);
             std::cout << "GetEx5: " << GetJVMTIError(curer) << std::endl;
 
-            std::vector<std::string> retrunable = { btoi(isinterbool), std::to_string(major) + "." + std::to_string(minor), btoi(ismodbool), btoi(isarrbool), GetAccessFlagAsString(flagsint), GetStatusIntAsString(statusint)};
+            std::vector<std::string> retrunable = { btoi(isinterbool), std::to_string(major) + "." + std::to_string(minor), btoi(ismodbool), btoi(isarrbool), GetAccessFlagAsString(flagsint), GetStatusIntAsString(statusint) };
 
 
             /*
@@ -1495,7 +1491,7 @@ void MainThread(HMODULE instance)
                     {
                         PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Class Cannot be modded!", "Class Cannot be modded!"});
                     }
-                    
+
                 }
                 else
                 {
@@ -1515,7 +1511,7 @@ void MainThread(HMODULE instance)
             }
             std::vector<jclass> classrefs;
             classrefs.reserve(args.size());
-            for (int i = 0; i < args.size(); i++) 
+            for (int i = 0; i < args.size(); i++)
             {
                 jclass adder = jniEnv->FindClass(args[i].c_str());
                 if (adder != nullptr) classrefs.emplace_back(adder);
@@ -1553,4 +1549,3 @@ bool __stdcall DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 
     return true;
 }
-

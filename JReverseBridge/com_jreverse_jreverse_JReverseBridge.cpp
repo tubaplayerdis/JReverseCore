@@ -188,6 +188,8 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     jfieldID IsConsoleWindowField = env->GetFieldID(StartupSettingsClass, "IsConsoleWindow", "Z");
     jfieldID FuncLoopTimeoutField = env->GetFieldID(StartupSettingsClass, "FuncLoopTimeout", "I");
     jfieldID JNIEnvTimeoutField = env->GetFieldID(StartupSettingsClass, "JNIEnvTimeout", "I");
+    jfieldID IsDynamicClassFileCollectionField = env->GetFieldID(StartupSettingsClass, "IsDynamicClassFileCollection", "Z");
+    jfieldID DynamicClassFileCollectionPathField = env->GetFieldID(StartupSettingsClass, "DynamicClassFileCollectionPath", "Ljava/lang/String;");
 
     //Instacne vars due to IPC problems
     std::string IsClassFileCollection = std::to_string(env->GetBooleanField(settings, IsClassFileCollectionField));
@@ -195,6 +197,8 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     std::string IsConsoleWindow = std::to_string(env->GetBooleanField(settings, IsConsoleWindowField));
     std::string FuncLoopTimeout = std::to_string(env->GetIntField(settings, FuncLoopTimeoutField));
     std::string JNIEnvTimeout = std::to_string(env->GetIntField(settings, JNIEnvTimeoutField));
+    std::string IsDynamicClassFileCollection = std::to_string(env->GetBooleanField(settings, DynamicClassFileCollectionPathField));
+    std::string DynamicClassFileCollectionPath = env->GetStringUTFChars((jstring)env->GetObjectField(settings, DynamicClassFileCollectionPathField), NULL);
 
     logger.Log("Startup Settings Being Sent:");
     logger.Log(IsClassFileCollection);
@@ -203,7 +207,7 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     logger.Log(FuncLoopTimeout);
     logger.Log(JNIEnvTimeout);
 
-    PipeAPI::SettingsPipe.WritePipe(std::vector<std::string>{IsClassFileCollection, IsClassFileLoadMessages, IsConsoleWindow, FuncLoopTimeout, JNIEnvTimeout});
+    PipeAPI::SettingsPipe.WritePipe(std::vector<std::string>{IsClassFileCollection, IsClassFileLoadMessages, IsConsoleWindow, FuncLoopTimeout, JNIEnvTimeout, IsDynamicClassFileCollection, DynamicClassFileCollectionPath});
 
     logger.Log("Wrote Settings to Pipe!");
 

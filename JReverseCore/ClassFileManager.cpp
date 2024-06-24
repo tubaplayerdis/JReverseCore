@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <synchapi.h>
 #include <mutex> // For std::mutex
+#include "DynamicCollector.h"
 
 std::mutex mtx;
 
@@ -49,9 +50,11 @@ void ClassFileManager::AddClassFile(ClassFile classfile)
     if (index != -1) //Class File Exists, so overwrite 
     {
         ClassFileManager::ClassFilesList[index] = classfile;
+        DynamicCollector::Collect(classfile);
         return;
     }
     ClassFileManager::ClassFilesList.push_back(classfile);
+    DynamicCollector::Collect(classfile);
 }
 
 std::vector<std::string> ClassFileManager::GetUnknownClassFiles()

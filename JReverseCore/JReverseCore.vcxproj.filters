@@ -43,6 +43,12 @@
     <Filter Include="Source Files\Startup">
       <UniqueIdentifier>{0b61f269-2535-461d-b3d7-5716316e83b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Dynamic Collection">
+      <UniqueIdentifier>{09943f3b-51b2-40c3-896d-71890552716a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DymanicCollection">
+      <UniqueIdentifier>{39b969ea-ed1a-49c4-af20-939e3c5988cd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -93,6 +99,9 @@
     <ClInclude Include="JReverseSettings.h">
       <Filter>Header Files\Startup</Filter>
     </ClInclude>
+    <ClInclude Include="DynamicCollector.h">
+      <Filter>Header Files\Dynamic Collection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -130,6 +139,9 @@
     </ClCompile>
     <ClCompile Include="JReverseSettings.cpp">
       <Filter>Source Files\Startup</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicCollector.cpp">
+      <Filter>Source Files\DymanicCollection</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
