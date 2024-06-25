@@ -10,7 +10,7 @@
 
 std::string DynamicCollector::collectionpath = "invalid";
 bool DynamicCollector::_docollection = false;
-std::vector<std::string> DynamicCollector::exclusionlist = std::vector<std::string>{};
+std::vector<DynamicCollectionExclusion> DynamicCollector::exclusionlist = std::vector<DynamicCollectionExclusion>{};
 
 void DynamicCollector::init(std::string path)
 {
@@ -60,23 +60,23 @@ void DynamicCollector::Collect(std::string name, std::string bytecodes)
 		{
 		case StartsWith:
 			if (name._Starts_with(exclusion.name)) {
-				std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
+				if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
 				return;
 			}
 			break;
 		case Contains:
 			if (name.find(exclusion.name) != std::string::npos) {
-				std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
+				if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
 				return;
 			}
 			break;
 		case Both:
 			if (name._Starts_with(exclusion.name)) {
-				std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
+				if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
 				return;
 			}
 			else if (name.find(exclusion.name) != std::string::npos) {
-				std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
+				if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
 				return;
 			}
 			break;
@@ -89,7 +89,7 @@ void DynamicCollector::Collect(std::string name, std::string bytecodes)
 	//Create folders and file based of of name
 	std::size_t lastSlashPos = name.find_last_of('/');
 	if (lastSlashPos == std::string::npos) {
-		std::cerr << "Invalid path format. No slashes found." << std::endl;
+		if (JReverseStartupSettings::isClassFileLoadMessages) std::cerr << "Invalid path format. No slashes found." << std::endl;
 		return;
 	}
 
@@ -116,22 +116,22 @@ void DynamicCollector::Collect(std::string name, std::string bytecodes)
 	// Create directories if they do not exist
 	if (!std::filesystem::exists(fullDirPath)) {
 		std::filesystem::create_directories(fullDirPath);
-		std::cout << "Created directories: " << fullDirPath << std::endl;
+		if(JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Created directories: " << fullDirPath << std::endl;
 	}
 	else {
-		std::cout << "Directories already exist: " << fullDirPath << std::endl;
+		if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Directories already exist: " << fullDirPath << std::endl;
 	}
 
 	// Create the file within the created directory
 	std::filesystem::path filePath = fullDirPath / fileName;
 	std::ofstream outFile(filePath, std::ios::binary);
 	if (outFile) {
-		std::cout << "Created file: " << filePath << std::endl;
+		if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Created file: " << filePath << std::endl;
 		outFile << result;
 		outFile.close();
 	}
 	else {
-		std::cerr << "Failed to create file!: " << filePath << std::endl;
+		if (JReverseStartupSettings::isClassFileLoadMessages) std::cerr << "Failed to create file!: " << filePath << std::endl;
 	}
 }
 
@@ -147,7 +147,7 @@ void DynamicCollector::Collect(std::string name, unsigned char* bytecodes, int b
 
 size_t DynamicCollector::FindExclsuionIndex(std::string name)
 {
-	for (int i = 0; i++; i < exclusionlist.size()) {
+	for (int i = 0; i < exclusionlist.size(); i++) {
 		if (name == exclusionlist[i].name) return i;
 	}
 	return -1;
@@ -157,20 +157,20 @@ size_t DynamicCollector::FindExclsuionIndex(std::string name)
 void DynamicCollector::ListExclusions()
 {
 	std::cout << "DYNAMIC CLASS FILE COLLECTION EXCLUSIONS" << std::endl;
-	for (DynamicCollectionExclusion exclusion : exclusionlist) {
-		switch (exclusion.type)
+	for (int i = 0; i < exclusionlist.size(); i++) {
+		switch (exclusionlist[i].type)
 		{
 		case StartsWith:
-			std::cout << "NAME: " << exclusion.name << "   TYPE: " << "StartsWith" << std::endl;
+			std::cout << "I: " << i << " NAME: " << exclusionlist[i].name << "   TYPE: " << "StartsWith" << std::endl;
 			break;
 		case Contains:
-			std::cout << "NAME: " << exclusion.name << "   TYPE: " << "Contains" << std::endl;
+			std::cout << "I: " << i << "NAME: " << exclusionlist[i].name << "   TYPE: " << "Contains" << std::endl;
 			break;
 		case Both:
-			std::cout << "NAME: " << exclusion.name << "   TYPE: " << "Both" << std::endl;
+			std::cout << "I: " << i << "NAME: " << exclusionlist[i].name << "   TYPE: " << "Both" << std::endl;
 			break;
 		default:
-			std::cout << "NAME: " << exclusion.name << "   TYPE: " << "Undefined" << std::endl;
+			std::cout << "I: " << i << "NAME: " << exclusionlist[i].name << "   TYPE: " << "Undefined" << std::endl;
 			break;
 		}
 	}

@@ -154,6 +154,7 @@
     <ClInclude Include="DynamicCollectionExclusion.h" />
     <ClInclude Include="DynamicCollector.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="JReverseCommandParser.h" />
     <ClInclude Include="JReversePipeClient.h" />
     <ClInclude Include="JReversePipeHelper.h" />
     <ClInclude Include="JReversePipeInfo.h" />

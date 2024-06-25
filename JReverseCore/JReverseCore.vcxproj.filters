@@ -49,6 +49,9 @@
     <Filter Include="Source Files\DymanicCollection">
       <UniqueIdentifier>{39b969ea-ed1a-49c4-af20-939e3c5988cd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Commands">
+      <UniqueIdentifier>{9715f5bd-b6da-4342-aac5-982c8ac8d4a4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -104,6 +107,9 @@
     </ClInclude>
     <ClInclude Include="DynamicCollectionExclusion.h">
       <Filter>Header Files\Dynamic Collection</Filter>
+    </ClInclude>
+    <ClInclude Include="JReverseCommandParser.h">
+      <Filter>Header Files\Commands</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
