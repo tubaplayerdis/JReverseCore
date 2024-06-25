@@ -1363,6 +1363,80 @@ void MainThread(HMODULE instance)
             const char* returnable = GetJVMTIError(TIenv->RetransformClasses(classrefs.size(), pointers));
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Retransform Classes Callback: ", returnable});
         }
+        else if (called == "getExclusionNames") {
+            std::vector<std::string> returnlist = {};
+            if (DynamicCollector::exclusionlist.size() == 0) {
+                returnlist.push_back("No Exclusions");
+                PipeClientAPI::ReturnPipe.WritePipe(returnlist);
+                continue;
+            }
+            for (DynamicCollectionExclusion exclusion : DynamicCollector::exclusionlist) {
+                returnlist.push_back(exclusion.name);
+            }
+            PipeClientAPI::ReturnPipe.WritePipe(returnlist);
+        }
+        else if (called == "getExclusionInfo") {
+            if (args[0].empty()) {
+                std::cout << "Empty args on getExclusionInfo" << std::endl;
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Args Empty!"});
+                continue;
+            }
+            std::vector<std::string> returnlist;
+            int index = DynamicCollector::FindExclsuionIndex(args[0]);
+            if (index == -1) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Exclusion does not exist!", "Exclusion does not exist!"});
+                continue;
+            }
+            returnlist.push_back(DynamicCollector::exclusionlist[index].name);
+            returnlist.push_back(std::to_string(DynamicCollector::exclusionlist[index].type));
+            PipeClientAPI::ReturnPipe.WritePipe(returnlist);
+        }
+        else if (called == "addExclusion") {
+            if (args[0].empty() || args[1].empty()) {
+                std::cout << "Empty args on addExclusion" << std::endl;
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Args Empty!"});
+                continue;
+            }
+            DynamicCollectionExclusionType typeexc = getExclusionType(std::stoi(args[1]));
+            DynamicCollectionExclusion exclusion;
+            exclusion.name = args[0];
+            exclusion.type = typeexc;
+            DynamicCollector::exclusionlist.push_back(exclusion);
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Sucsessfully Added Exclusion"});
+        }
+        else if (called == "modifyExclusion") {
+            if (args[0].empty() || args[1].empty()) {
+                std::cout << "Empty args on modifyExclusion" << std::endl;
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Args Empty!"});
+                continue;
+            }
+            int index = DynamicCollector::FindExclsuionIndex(args[0]);
+            if (index == -1) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Exclusion does not exist!"});
+                continue;
+            }
+            DynamicCollectionExclusionType typeexc = getExclusionType(std::stoi(args[1]));
+            DynamicCollectionExclusion exclusion;
+            exclusion.name = args[0];
+            exclusion.type = typeexc;
+            DynamicCollector::exclusionlist[index] = exclusion;
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Sucsessfully Modified Exclusion"});
+        }
+        else if (called == "removeExclusion") {
+            if (args[0].empty()) {
+                std::cout << "Empty args on removeExclusion" << std::endl;
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Args Empty!"});
+                continue;
+            }
+            std::vector<std::string> returnlist;
+            int index = DynamicCollector::FindExclsuionIndex(args[0]);
+            if (index == -1) {
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Exclusion does not exist!"});
+                continue;
+            }
+            DynamicCollector::exclusionlist.erase(DynamicCollector::exclusionlist.begin() + index);
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Sucsessfully Removed Exclusion"});
+        }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
         }

@@ -126,7 +126,7 @@ void DynamicCollector::Collect(std::string name, std::string bytecodes)
 	std::filesystem::path filePath = fullDirPath / fileName;
 	std::ofstream outFile(filePath, std::ios::binary);
 	if (outFile) {
-		if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Created file: " << filePath << std::endl;
+		if (JReverseStartupSettings::isClassFileLoadMessages) std::cout << "Created or opened file: " << filePath << std::endl;
 		outFile << result;
 		outFile.close();
 	}
