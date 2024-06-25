@@ -4,10 +4,13 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <mutex>
 #include "JReverseSettings.h"
+
 
 std::string DynamicCollector::collectionpath = "invalid";
 bool DynamicCollector::_docollection = false;
+std::vector<std::string> DynamicCollector::exclusionlist = std::vector<std::string>{};
 
 void DynamicCollector::init(std::string path)
 {
@@ -50,6 +53,38 @@ void DynamicCollector::Collect(ClassFile classfile)
 void DynamicCollector::Collect(std::string name, std::string bytecodes)
 {
 	if (!_docollection) return;
+
+	//Check for exclusion
+	for (DynamicCollectionExclusion exclusion : exclusionlist) {
+		switch (exclusion.type)
+		{
+		case StartsWith:
+			if (name._Starts_with(exclusion.name)) {
+				std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
+				return;
+			}
+			break;
+		case Contains:
+			if (name.find(exclusion.name) != std::string::npos) {
+				std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
+				return;
+			}
+			break;
+		case Both:
+			if (name._Starts_with(exclusion.name)) {
+				std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
+				return;
+			}
+			else if (name.find(exclusion.name) != std::string::npos) {
+				std::cout << "Dynamic Class File Collection Exclusion Detected!" << std::endl;
+				return;
+			}
+			break;
+		default:
+			//Ignore the exclusion
+			break;
+		}
+	}
 
 	//Create folders and file based of of name
 	std::size_t lastSlashPos = name.find_last_of('/');
@@ -108,6 +143,37 @@ void DynamicCollector::Collect(std::string name, unsigned char* bytecodes, int b
 		toadd << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
 	}
 	DynamicCollector::Collect(name, toadd.str());
+}
+
+size_t DynamicCollector::FindExclsuionIndex(std::string name)
+{
+	for (int i = 0; i++; i < exclusionlist.size()) {
+		if (name == exclusionlist[i].name) return i;
+	}
+	return -1;
+}
+
+
+void DynamicCollector::ListExclusions()
+{
+	std::cout << "DYNAMIC CLASS FILE COLLECTION EXCLUSIONS" << std::endl;
+	for (DynamicCollectionExclusion exclusion : exclusionlist) {
+		switch (exclusion.type)
+		{
+		case StartsWith:
+			std::cout << "NAME: " << exclusion.name << "   TYPE: " << "StartsWith" << std::endl;
+			break;
+		case Contains:
+			std::cout << "NAME: " << exclusion.name << "   TYPE: " << "Contains" << std::endl;
+			break;
+		case Both:
+			std::cout << "NAME: " << exclusion.name << "   TYPE: " << "Both" << std::endl;
+			break;
+		default:
+			std::cout << "NAME: " << exclusion.name << "   TYPE: " << "Undefined" << std::endl;
+			break;
+		}
+	}
 }
 
 void DynamicCollector::_checkpath()

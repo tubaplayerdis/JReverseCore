@@ -102,6 +102,9 @@
     <ClInclude Include="DynamicCollector.h">
       <Filter>Header Files\Dynamic Collection</Filter>
     </ClInclude>
+    <ClInclude Include="DynamicCollectionExclusion.h">
+      <Filter>Header Files\Dynamic Collection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

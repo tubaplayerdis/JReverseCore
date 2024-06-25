@@ -151,6 +151,7 @@
     <ClInclude Include="ClassFileManager.h" />
     <ClInclude Include="com_jreverse_jreverse_Core_JReverseScriptingCore.h" />
     <ClInclude Include="datastore.h" />
+    <ClInclude Include="DynamicCollectionExclusion.h" />
     <ClInclude Include="DynamicCollector.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="JReversePipeClient.h" />
