@@ -1,5 +1,6 @@
 #include "com_jreverse_jreverse_JReverseBridge.h"
 #include <windows.h>
+#include <psapi.h>
 #include <TlHelp32.h>
 #include <iostream>
 #include <codecvt> // For std::wstring_convert and std::codecvt_utf8_utf16
@@ -50,11 +51,32 @@ bool InjectOnStartup(char* dllName, std::wstring apppath)
 }
 
 
-bool Inject(DWORD pId, char* dllName)
+int Inject(DWORD pId, char* dllName)
 {
     HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, false, pId);
     if (h)
     {
+        HMODULE hMods[1024];
+        DWORD cbNeeded;
+        unsigned int i;
+        //Check if JReverseCore.dll is Already Loaded
+        if (EnumProcessModules(h, hMods, sizeof(hMods), &cbNeeded))
+        {
+            for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
+            {
+                TCHAR szModName[MAX_PATH];
+
+                // Get the full path to the module's file.
+
+                if (GetModuleFileNameEx(h, hMods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
+                {
+                    // Print the module name and handle value.
+                    std::wstring modulename = szModName;
+                    if (modulename.find(L"JReverseCore.dll") != std::wstring::npos) return 2;
+                }
+            }
+        }
+
         LPVOID LoadLibAddr = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
         LPVOID dereercomp = VirtualAllocEx(h, NULL, strlen(dllName), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         WriteProcessMemory(h, dereercomp, dllName, strlen(dllName), NULL);
@@ -63,9 +85,9 @@ bool Inject(DWORD pId, char* dllName)
         VirtualFreeEx(h, dereercomp, strlen(dllName), MEM_RELEASE);
         CloseHandle(asdc);
         CloseHandle(h);
-        return true;
+        return 0;
     }
-    return false;
+    return 1;
 }
 
 // Function to get the base address of a module in a specified process
@@ -130,10 +152,9 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_InjectDL
 {
     DWORD pid = (DWORD)PID;
     char* location = (char*)jniEnv->GetStringUTFChars(Location, 0);
-    bool InjectCode = Inject(pid, location);
+    int InjectCode = Inject(pid, location);
     jniEnv->ReleaseStringUTFChars(Location, location);
-    if (InjectCode == false) { return (jint)1; }
-    else { return (jint)0; }
+    return InjectCode;
 }
 
 JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteStartupPipe(JNIEnv* env, jclass, jobjectArray rulesArray, jobject settings)
@@ -308,6 +329,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
     }
 
     return stringArray;
+}
+
+JNIEXPORT jfloat JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_GetVersion(JNIEnv*, jclass)
+{
+    return 0.01;
 }
 
 

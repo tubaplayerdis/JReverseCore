@@ -933,6 +933,9 @@ void MainThread(HMODULE instance)
                 PipeClientAPI::ReturnPipe.WritePipe(sus);
             }
         }
+        else if (called == "getVersionCore") {
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{std::to_string(0.01)});
+        }
         else if (called == "getClassMethods") {
             std::printf("Getting Class Methods\n");
             PipeClientAPI::ReturnPipe.WritePipe(getClassMethods(TIenv, jniEnv, args[0]));

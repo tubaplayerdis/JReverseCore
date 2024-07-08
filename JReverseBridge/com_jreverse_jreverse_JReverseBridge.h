@@ -86,6 +86,14 @@ extern "C" {
 	 */
 	JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_CallCoreFunction
 	(JNIEnv*, jclass, jstring, jobjectArray);
+
+	/*
+	* Class:     com_jreverse_jreverse_Bridge_JReverseBridge
+	* Method:    GetVersion
+	* Signature: ()J
+	*/
+	JNIEXPORT jfloat JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_GetVersion
+	(JNIEnv*, jclass);
 #ifdef __cplusplus
 }
 #endif
