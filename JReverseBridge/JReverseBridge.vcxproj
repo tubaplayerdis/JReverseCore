@@ -124,7 +124,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>C:\Program Files\Java\jdk-17\lib;C:\boost_1_84_0\stage\x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>jvm.lib;libboost_system-vc143-mt-x64-1_84.lib;libboost_system-vc143-mt-gd-x64-1_84.lib;libboost_date_time-vc143-mt-gd-x64-1_84.lib;libboost_date_time-vc143-mt-x64-1_84.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>jvm.lib;libboost_system-vc143-mt-x64-1_84.lib;libboost_system-vc143-mt-gd-x64-1_84.lib;libboost_date_time-vc143-mt-gd-x64-1_84.lib;libboost_date_time-vc143-mt-x64-1_84.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

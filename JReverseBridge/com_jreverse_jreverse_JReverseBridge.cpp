@@ -1,5 +1,7 @@
 #include "com_jreverse_jreverse_JReverseBridge.h"
 #include <windows.h>
+#include <string>
+#include <vector>
 #include <psapi.h>
 #include <TlHelp32.h>
 #include <iostream>
@@ -334,6 +336,60 @@ JNIEXPORT jobjectArray JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_
 JNIEXPORT jfloat JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_GetVersion(JNIEnv*, jclass)
 {
     return 0.01;
+}
+
+JNIEXPORT jfloat JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_GetCoreFileVersion(JNIEnv* env, jclass clazz, jstring fieloc)
+{
+    //String conversion
+    const char* cstr = env->GetStringUTFChars(fieloc, NULL);
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, cstr, -1, NULL, 0);
+    std::wstring filePath(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, cstr, -1, &filePath[0], size_needed);
+
+    // Get the size of the version information
+    DWORD handle = 0;
+    DWORD versionInfoSize = GetFileVersionInfoSizeW(filePath.c_str(), &handle);
+
+    if (versionInfoSize == 0) {
+        std::cerr << "Error getting version info size: " << GetLastError() << std::endl;
+        return -2.0F;
+    }
+
+    // Allocate a buffer to hold the version information
+    std::vector<BYTE> versionInfo(versionInfoSize);
+
+    // Get the version information
+    if (!GetFileVersionInfoW(filePath.c_str(), handle, versionInfoSize, versionInfo.data())) {
+        std::cerr << "Error getting version info: " << GetLastError() << std::endl;
+        return -2.0F;
+    }
+
+    // Query the value
+    VS_FIXEDFILEINFO* fileInfo = nullptr;
+    UINT size = 0;
+    if (!VerQueryValueW(versionInfo.data(), L"\\", reinterpret_cast<LPVOID*>(&fileInfo), &size) || size == 0) {
+        std::cerr << "Error querying version info: " << GetLastError() << std::endl;
+        return -2.0F;
+    }
+
+    // Extract the version information
+    DWORD fileVersionMS = fileInfo->dwFileVersionMS;
+    DWORD fileVersionLS = fileInfo->dwFileVersionLS;
+
+    DWORD majorVersion = HIWORD(fileVersionMS);
+    DWORD minorVersion = LOWORD(fileVersionMS);
+    DWORD buildNumber = HIWORD(fileVersionLS);
+    DWORD revisionNumber = LOWORD(fileVersionLS);
+
+    std::wcout << L"File Version: " << majorVersion << L"." << minorVersion << L"."
+        << buildNumber << L"." << revisionNumber << std::endl;
+
+    float versionfloat = majorVersion * 1.0F
+        + minorVersion * 0.1F
+        + buildNumber * 0.01F
+        + revisionNumber * 0.001F;
+
+    return versionfloat;
 }
 
 

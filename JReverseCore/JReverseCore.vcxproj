@@ -165,6 +165,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="PipeClientAPI.h" />
     <ClInclude Include="PipeManager.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="StartupRule.h" />
   </ItemGroup>
   <ItemGroup>
@@ -186,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="PipeClientAPI.cpp" />
     <ClCompile Include="PipeManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="VersionInfo.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
