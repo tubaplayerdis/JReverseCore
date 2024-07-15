@@ -1,2 +1,3 @@
 NOTE: If the Bridge DLL is Updated, it has to be copied to the jreverse folder(more like replaces) for updates to work becuase it uses that dll: C:\Users\aaron\IdeaProjects\jreverse
-Look at JReverse TODO.txt
+
+Update responder in dllmain for IPC version responce and resource file

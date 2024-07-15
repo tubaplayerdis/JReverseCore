@@ -192,6 +192,15 @@ inline void RunDebugConsole() {
     else if (command == "EXCLUSIONLIST") {
         DynamicCollector::ListExclusions();
     }
+    else if (command == "PRINTRULES") {
+        std::cout << "isClassFileLoadMessages: " << JReverseStartupSettings::isClassFileLoadMessages << std::endl;
+        std::cout << "isClassFileCollection: " << JReverseStartupSettings::isDynamicClassFileCollection << std::endl;
+        std::cout << "isConsoleWindow: " << JReverseStartupSettings::isConsoleWindow << std::endl;
+        std::cout << "funcLoopTimeout: " << JReverseStartupSettings::funcLoopTimeout << std::endl;
+        std::cout << "JNIEnvTimeout: " << JReverseStartupSettings::JNIEnvTiemout << std::endl;
+        std::cout << "isDynamicClassFileCollection: " << JReverseStartupSettings::isDynamicClassFileCollection << std::endl;
+        std::cout << "DynamicClassFileCollectionPath: " << JReverseStartupSettings::DynamicClassFileCollectionPath << std::endl;
+    }
 
     JReverseStartupSettings::isClassFileLoadMessages = restore;
 

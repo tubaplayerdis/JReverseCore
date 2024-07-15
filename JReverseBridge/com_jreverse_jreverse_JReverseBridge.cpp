@@ -220,7 +220,7 @@ JNIEXPORT jint JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_WriteSta
     std::string IsConsoleWindow = std::to_string(env->GetBooleanField(settings, IsConsoleWindowField));
     std::string FuncLoopTimeout = std::to_string(env->GetIntField(settings, FuncLoopTimeoutField));
     std::string JNIEnvTimeout = std::to_string(env->GetIntField(settings, JNIEnvTimeoutField));
-    std::string IsDynamicClassFileCollection = std::to_string(env->GetBooleanField(settings, DynamicClassFileCollectionPathField));
+    std::string IsDynamicClassFileCollection = std::to_string(env->GetBooleanField(settings, IsDynamicClassFileCollectionField));
     std::string DynamicClassFileCollectionPath = env->GetStringUTFChars((jstring)env->GetObjectField(settings, DynamicClassFileCollectionPathField), NULL);
 
     logger.Log("Startup Settings Being Sent:");
