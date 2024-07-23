@@ -37,17 +37,20 @@ public:
     void Grow(long long int size);
     void Reload(long long int size);
     void Free();
+    long long int GetOriginalSize();
 private:
     boost::interprocess::managed_shared_memory shm;
     void* address;
     size_t writtenSize;
     std::string name;
     boost::interprocess::mode_t mode;
+    long long int originalsize;
 };
 
 template<typename T>
 inline JReversePipe<T>::JReversePipe(std::string Name, boost::interprocess::mode_t Mode, int Size)
 {
+    originalsize = Size;
     //Store for resize data
     name = Name;
     mode = Mode;
@@ -225,6 +228,12 @@ template<typename T>
 inline void JReversePipe<T>::Free()
 {
     boost::interprocess::shared_memory_object::remove(name.c_str());
+}
+
+template<typename T>
+inline long long int JReversePipe<T>::GetOriginalSize()
+{
+    return originalsize;
 }
 
 

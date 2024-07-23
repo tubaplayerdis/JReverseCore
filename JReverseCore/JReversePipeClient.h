@@ -104,7 +104,7 @@ inline void JReversePipeClient<T>::WritePipe(const T& data)
                 i++;
             }
         }
-        catch (boost::interprocess::bad_alloc e) {
+        catch (boost::interprocess::bad_alloc& e) {
             std::cout << "Not Enough Memory Avialable! Resize: " << name << " in IPC Manager!" << std::endl;
             std::cout << "Stopped at: " << i << "/" << d << " Strings" << std::endl;
         }
@@ -168,7 +168,7 @@ inline T JReversePipeClient<T>::ReadPipe()
                 result.push_back("NONE");
             }
         }
-        catch (boost::interprocess::interprocess_exception e)
+        catch (boost::interprocess::interprocess_exception& e)
         {
             result.push_back(std::string(e.what()));
         }

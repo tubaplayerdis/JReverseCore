@@ -102,6 +102,14 @@ extern "C" {
 	 */
 	JNIEXPORT jfloat JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_GetCoreFileVersion
 	(JNIEnv*, jclass, jstring);
+
+	/*
+	 * Class:     com_jreverse_jreverse_Bridge_JReverseBridge
+	 * Method:    ReloadPipes
+	 * Signature: ()V
+	 */
+	JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_ReloadPipes
+	(JNIEnv*, jclass);
 #ifdef __cplusplus
 }
 #endif

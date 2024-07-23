@@ -1191,7 +1191,7 @@ void MainThread(HMODULE instance)
         else if (called == "createInterpreter") {
             jclass PythonInterpreterCalss = jniEnv->FindClass("org/python/util/PythonInterpreter");
             if (PythonInterpreterCalss == nullptr) {
-                std::cout << "Failed to find Python Interperter Class When Making New Interpreter!" << std::endl;
+                std::cout << "Failed to find Python Interpreter Class When Making New Interpreter!" << std::endl;
             }
             JythonInterpreter what(jniEnv, stringWriterObj, PythonInterpreterCalss, writeWriterMethod);
             std::cout << "Adding Interpreter!" << std::endl;
@@ -1241,7 +1241,7 @@ void MainThread(HMODULE instance)
                 std::cout << "Checking for Interpreter class" << std::endl;
                 jclass PythonInterpreterCalss = jniEnv->FindClass("org/python/util/PythonInterpreter");
                 if (PythonInterpreterCalss == nullptr) {
-                    std::cout << "Failed to find Python Interperter Class!" << std::endl;
+                    std::cout << "Failed to find Python Interpreter Class!" << std::endl;
                 }
                 else
                 {

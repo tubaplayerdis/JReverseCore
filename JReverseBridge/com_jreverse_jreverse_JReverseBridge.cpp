@@ -392,6 +392,28 @@ JNIEXPORT jfloat JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_GetCor
     return versionfloat;
 }
 
+JNIEXPORT void JNICALL Java_com_jreverse_jreverse_Bridge_JReverseBridge_ReloadPipes(JNIEnv* env, jclass)
+{
+    JReverseLogger logger = JReverseLogger(env);
+    logger.Log("RELOADING ALL PIPES");
+    PipeAPI::CommunicationPipe.Reload(PipeAPI::CommunicationPipe.GetOriginalSize());
+    logger.Log("Reloaded CommunicationPipe");
+    PipeAPI::FunctionArgPipe.Reload(PipeAPI::FunctionArgPipe.GetOriginalSize());
+    logger.Log("Reloaded FunctionArgPipe");
+    PipeAPI::FunctionPipe.Reload(PipeAPI::FunctionPipe.GetOriginalSize());
+    logger.Log("Reloaded FunctionPipe");
+    PipeAPI::PipeNamePipe.Reload(PipeAPI::PipeNamePipe.GetOriginalSize());
+    logger.Log("Reloaded PipeNamePipe");
+    PipeAPI::ReturnPipe.Reload(PipeAPI::ReturnPipe.GetOriginalSize());
+    logger.Log("Reloaded ReturnPipe");
+    PipeAPI::SettingsPipe.Reload(PipeAPI::SettingsPipe.GetOriginalSize());
+    logger.Log("Reloaded SettingsPipe");
+    PipeAPI::StartupRulesPipe.Reload(PipeAPI::StartupRulesPipe.GetOriginalSize());
+    logger.Log("Reloaded StartupRulesPipe");
+
+}
+
+
 
 
 
