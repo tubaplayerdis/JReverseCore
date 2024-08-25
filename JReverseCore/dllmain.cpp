@@ -1054,7 +1054,7 @@ void MainThread(HMODULE instance)
             //Seutp python
             std::cout << "Seting up Jython!" << std::endl;
 
-            if (!std::filesystem::exists(args[1].c_str())) std::cout << "The Jar file does not exist!" << std::endl;
+            if (!std::filesystem::exists(args[1].c_str())) std::cout << "The Jython Jar file does not exist!" << std::endl;
 
             //This works. Thanks Stack Overflow!
             add_path(jniEnv, args[1]);
@@ -1439,6 +1439,15 @@ void MainThread(HMODULE instance)
             }
             DynamicCollector::exclusionlist.erase(DynamicCollector::exclusionlist.begin() + index);
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Sucsessfully Removed Exclusion"});
+        }
+        else if (called == "addPath") {
+            if (args[0].empty()) {
+                std::cout << "Empty args on addPath" << std::endl;
+                PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Args Empty!", "Args Empty!"});
+                continue;
+            }
+            add_path(jniEnv, args[0]);
+            PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Sucsess: ", args[0] });
         }
         else {
             PipeClientAPI::ReturnPipe.WritePipe(std::vector<std::string>{"Function", "Non Existent"});
